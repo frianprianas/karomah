@@ -5,12 +5,6 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(req: Request) {
     try {
-        // Hanya izinkan akses dari localhost untuk keamanan
-        const forwarded = req.headers.get("x-forwarded-for");
-        if (forwarded && forwarded !== '127.0.0.1') {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
         const { username, password } = await req.json();
 
         if (!username || !password) {
