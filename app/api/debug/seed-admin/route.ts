@@ -29,8 +29,7 @@ export async function POST(req: Request) {
         await Admin.create({
             username,
             password: hashedPassword,
-            nama: 'Super Admin',
-            role: 'admin'
+            nama: 'Super Admin'
         });
 
         return NextResponse.json({ message: 'Admin created successfully' });
