@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar';
 import { CheckCircle } from 'lucide-react';
 import connectDB from '@/lib/db';
 import Jurnal from '@/models/Jurnal';
+import WelcomeModal from '@/components/WelcomeModal';
 
 async function getJournalStatus(nis: string) {
     await connectDB();
@@ -69,7 +70,10 @@ export default async function Dashboard() {
                     <p className="text-[#795548] text-xs mt-1 font-serif">Jurnal Ramadan 1447 Hijriyah</p>
                 </div>
 
+                <WelcomeModal />
+
                 <h2 className="text-2xl font-serif font-bold text-[#3e2723] mb-6 relative">
+
                     <span className="bg-[#fdfbf7] px-4 relative z-10">Daftar Isi Jurnal</span>
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-[1px] bg-[#8d6e63] -z-0"></div>
                 </h2>
@@ -129,7 +133,7 @@ export default async function Dashboard() {
                         )
                     })}
                 </div>
-            </main>
-        </div>
+            </main >
+        </div >
     );
 }
