@@ -40,7 +40,7 @@ export default function PageTransition({ children }: { children: React.ReactNode
         }
     }, [pathname]);
 
-    const variants = {
+    const variants: any = {
         initial: (dir: 'forward' | 'backward') => {
             if (dir === 'forward') {
                 return {
