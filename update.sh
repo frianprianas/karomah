@@ -1,18 +1,23 @@
 #!/bin/bash
 
-# Script untuk update aplikasi Karomah di server Ubuntu
-echo "--- MEMULAI UPDATE APLIKASI KAROMAH ---"
+# Script untuk update aplikasi Karomah di server Ubuntu secara paksa & bersih
+echo "--- MEMULAI UPDATE APLIKASI KAROMAH (PRODUKSI) ---"
 
-# 1. Tarik kode terbaru dari GitHub
-echo "Sedang mengambil kode terbaru..."
-git pull origin main
+# 1. Tarik kode terbaru dan paksa sinkron dengan GitHub
+echo "Sedang menyelaraskan kode dengan GitHub..."
+git fetch --all
+git reset --hard origin/main
 
-# 2. Build ulang dan jalankan container
-echo "Sedang membangun ulang container (ini mungkin memakan waktu)..."
+# 2. Build ulang dan jalankan container tanpa menggunakan cache lama
+echo "Sedang membangun ulang container (Fresh Build)..."
+# Menggunakan 'docker compose' (Docker V2) sesuai spesifikasi server
+sudo docker compose down
+sudo docker system prune -af
 sudo docker compose up -d --build
 
-# 3. Bersihkan image lama yang tidak terpakai (hemat disk)
-echo "Membersihkan sisa-sisa build lama..."
-sudo docker system prune -f
+# 3. Verifikasi status container
+echo "Memeriksa status layanan..."
+sudo docker compose ps
 
-echo "--- UPDATE SELESAI! Aplikasi sudah berjalan di versi terbaru ---"
+echo "--- UPDATE SELESAI! ---"
+echo "Aplikasi sekarang berjalan di: https://karomah.smkbn666.sch.id"
