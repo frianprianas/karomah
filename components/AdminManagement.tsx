@@ -109,8 +109,8 @@ export default function AdminManagement() {
                 <button
                     onClick={() => setActiveTab('siswa')}
                     className={`flex items-center gap-2 px-6 py-3 rounded-sm border-2 transition-all font-serif ${activeTab === 'siswa'
-                            ? "bg-[#5d4037] text-[#f0e6d2] border-[#3e2723] shadow-md"
-                            : "bg-[#f0e6d2] text-[#5d4037] border-[#d7ccc8] hover:bg-[#d7ccc8]/30"
+                        ? "bg-[#5d4037] text-[#f0e6d2] border-[#3e2723] shadow-md"
+                        : "bg-[#f0e6d2] text-[#5d4037] border-[#d7ccc8] hover:bg-[#d7ccc8]/30"
                         }`}
                 >
                     <GraduationCap className="w-5 h-5" />
@@ -119,8 +119,8 @@ export default function AdminManagement() {
                 <button
                     onClick={() => setActiveTab('guru')}
                     className={`flex items-center gap-2 px-6 py-3 rounded-sm border-2 transition-all font-serif ${activeTab === 'guru'
-                            ? "bg-[#5d4037] text-[#f0e6d2] border-[#3e2723] shadow-md"
-                            : "bg-[#f0e6d2] text-[#5d4037] border-[#d7ccc8] hover:bg-[#d7ccc8]/30"
+                        ? "bg-[#5d4037] text-[#f0e6d2] border-[#3e2723] shadow-md"
+                        : "bg-[#f0e6d2] text-[#5d4037] border-[#d7ccc8] hover:bg-[#d7ccc8]/30"
                         }`}
                 >
                     <School className="w-5 h-5" />
@@ -137,7 +137,7 @@ export default function AdminManagement() {
                         placeholder="Cari nama atau nomor..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-white border border-[#d7ccc8] rounded-sm focus:border-[#5d4037] outline-none font-serif text-sm"
+                        className="w-full pl-10 pr-4 py-2 bg-white border border-[#d7ccc8] rounded-sm focus:border-[#5d4037] outline-none font-serif text-sm text-[#3e2723]"
                     />
                 </div>
                 <button
@@ -224,7 +224,7 @@ export default function AdminManagement() {
                                     required
                                     value={activeTab === 'siswa' ? formData.nis : formData.nipy}
                                     onChange={(e) => setFormData({ ...formData, [activeTab === 'siswa' ? 'nis' : 'nipy']: e.target.value })}
-                                    className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:border-[#5d4037] outline-none"
+                                    className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:border-[#5d4037] outline-none text-[#3e2723]"
                                 />
                             </div>
 
@@ -235,7 +235,7 @@ export default function AdminManagement() {
                                     required
                                     value={formData.nama}
                                     onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
-                                    className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:border-[#5d4037] outline-none"
+                                    className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:border-[#5d4037] outline-none text-[#3e2723]"
                                 />
                             </div>
 
@@ -246,7 +246,7 @@ export default function AdminManagement() {
                                     required={activeTab === 'siswa'}
                                     value={activeTab === 'siswa' ? formData.kelas : formData.ket}
                                     onChange={(e) => setFormData({ ...formData, [activeTab === 'siswa' ? 'kelas' : 'ket']: e.target.value })}
-                                    className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:border-[#5d4037] outline-none"
+                                    className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:border-[#5d4037] outline-none text-[#3e2723]"
                                 />
                             </div>
 
@@ -259,7 +259,7 @@ export default function AdminManagement() {
                                     required={!editingItem}
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:border-[#5d4037] outline-none"
+                                    className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:border-[#5d4037] outline-none text-[#3e2723]"
                                 />
                             </div>
 

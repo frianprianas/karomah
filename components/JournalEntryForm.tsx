@@ -34,7 +34,7 @@ function TimeSelect({ value, onChange, label }: { value: string, onChange: (val:
                     <select
                         value={h}
                         onChange={(e) => updateTime(e.target.value, m)}
-                        className="w-full p-2 border rounded-md focus:ring-emerald-500 focus:border-emerald-500 appearance-none bg-white"
+                        className="w-full p-2 border rounded-md focus:ring-emerald-500 focus:border-emerald-500 appearance-none bg-white text-[#3e2723]"
                     >
                         <option value="">Jam</option>
                         {hours.map(hour => (
@@ -47,7 +47,7 @@ function TimeSelect({ value, onChange, label }: { value: string, onChange: (val:
                     <select
                         value={m}
                         onChange={(e) => updateTime(h, e.target.value)}
-                        className="w-full p-2 border rounded-md focus:ring-emerald-500 focus:border-emerald-500 appearance-none bg-white"
+                        className="w-full p-2 border rounded-md focus:ring-emerald-500 focus:border-emerald-500 appearance-none bg-white text-[#3e2723]"
                     >
                         <option value="">Menit</option>
                         {minutes.map(min => (
@@ -246,7 +246,7 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                         <select
                             value={formData.tadarus.surat}
                             onChange={(e) => handleChange('tadarus', 'surat', e.target.value)}
-                            className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:ring-[#8d6e63] focus:border-[#5d4037] font-serif outline-none"
+                            className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:ring-[#8d6e63] focus:border-[#5d4037] font-serif outline-none text-[#3e2723]"
                         >
                             <option value="">Pilih Surat...</option>
                             {SURAH_LIST.map((surah) => (
@@ -260,7 +260,7 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                             type="text"
                             value={formData.tadarus.ayat}
                             onChange={(e) => handleChange('tadarus', 'ayat', e.target.value)}
-                            className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:ring-[#8d6e63] focus:border-[#5d4037] font-serif outline-none"
+                            className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:ring-[#8d6e63] focus:border-[#5d4037] font-serif outline-none text-[#3e2723]"
                             placeholder="Contoh: 1-10"
                         />
                     </div>
@@ -288,7 +288,7 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                                 <textarea
                                     value={formData[activity].kegiatan}
                                     onChange={(e) => handleChange(activity, 'kegiatan', e.target.value)}
-                                    className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:ring-[#8d6e63] focus:border-[#5d4037] font-serif outline-none"
+                                    className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:ring-[#8d6e63] focus:border-[#5d4037] font-serif outline-none text-[#3e2723]"
                                     rows={2}
                                     placeholder={`Ceritakan detail aktifitas ${activity.replace('_', ' ')}...`}
                                 />
@@ -308,7 +308,7 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                             type="text"
                             value={formData.catatan_ihsan.sumber}
                             onChange={(e) => handleChange('catatan_ihsan', 'sumber', e.target.value)}
-                            className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:ring-[#8d6e63] focus:border-[#5d4037] font-serif outline-none"
+                            className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:ring-[#8d6e63] focus:border-[#5d4037] font-serif outline-none text-[#3e2723]"
                             placeholder="Contoh: Kultum Masjid / Youtube"
                         />
                     </div>
@@ -317,7 +317,7 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                         <textarea
                             value={formData.catatan_ihsan.isi}
                             onChange={(e) => handleChange('catatan_ihsan', 'isi', e.target.value)}
-                            className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:ring-[#8d6e63] focus:border-[#5d4037] font-serif outline-none"
+                            className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:ring-[#8d6e63] focus:border-[#5d4037] font-serif outline-none text-[#3e2723]"
                             rows={3}
                             placeholder="Ringkasan materi..."
                         />
