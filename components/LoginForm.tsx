@@ -161,9 +161,10 @@ export default function LoginForm() {
                             {loading ? 'Membuka...' : 'Buka Buku'}
                         </button>
 
-                        <p className="text-center mt-6 text-xs text-[#795548] font-serif">
-                            &copy; 2024 Karomah Edition • SMK BN 666
-                        </p>
+                        <div className="text-center mt-6 text-xs text-[#795548] font-serif">
+                            <p>&copy; 2026 Karomah Edition • SMK BN 666</p>
+                            <p className="mt-1 opacity-70">by : IT Support</p>
+                        </div>
                     </form>
                 </div>
             </div>
