@@ -3,9 +3,17 @@
 
 import { useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 export default function SideNavigation({ day, maxDays = 30 }: { day: number, maxDays?: number }) {
     const router = useRouter();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
 
     const goToPrev = () => {
         if (day > 1) router.push(`/journal/${day - 1}`);
@@ -15,8 +23,8 @@ export default function SideNavigation({ day, maxDays = 30 }: { day: number, max
         if (day < maxDays) router.push(`/journal/${day + 1}`);
     };
 
-    return (
-        <div className="fixed inset-y-0 left-0 right-0 pointer-events-none flex items-center justify-between px-2 sm:px-4 z-40">
+    const content = (
+        <div className="fixed inset-y-0 left-0 right-0 pointer-events-none flex items-center justify-between px-2 sm:px-4 z-[100]">
             {/* Left Button */}
             {day > 1 ? (
                 <button
@@ -40,4 +48,8 @@ export default function SideNavigation({ day, maxDays = 30 }: { day: number, max
             ) : <div className="w-10 sm:w-12"></div>}
         </div>
     );
+
+    if (!mounted) return null;
+
+    return createPortal(content, document.body);
 }

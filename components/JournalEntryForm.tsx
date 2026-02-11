@@ -104,7 +104,7 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
         if (section === 'root') {
             setFormData({ ...formData, [field]: value });
         } else {
-            console.log(formData);
+            // console.log(formData);
             setFormData({
                 ...formData,
                 [section]: { ...formData[section], [field]: value }
@@ -167,10 +167,17 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                     <p className="text-[#3e2723] italic font-serif leading-relaxed text-lg">
                         "{initialData.catatan_guru}"
                     </p>
-                    <div className="mt-4 flex justify-end">
+                    <div className="mt-4 flex justify-end flex-col items-end">
                         <div className="text-[10px] text-[#8d6e63] font-bold uppercase tracking-tighter">
-                            Tertanda, Guru Pembina Karomah
+                            Tertanda, {initialData.nama_guru_komentar || 'Guru Pembina Karomah'}
                         </div>
+                        {initialData.dikomentari_pada && (
+                            <div className="text-[9px] text-[#8d6e63] italic mt-1 text-right">
+                                {new Date(initialData.dikomentari_pada).toLocaleDateString('id-ID', {
+                                    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                                })} WIB
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
@@ -346,6 +353,25 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                     <Save className="w-5 h-5" />
                     {loading ? 'Menyimpan...' : 'Simpan Jurnal'}
                 </button>
+
+                {/* Last Updated Info */}
+                {(initialData?.updatedAt || initialData?.createdAt) && (
+                    <div className="text-center mt-4 space-y-1">
+                        <p className="text-xs text-[#8d6e63] font-serif italic opacity-80">
+                            Terakhir disimpan:
+                        </p>
+                        <p className="text-xs text-[#5d4037] font-serif font-semibold">
+                            {new Date(initialData.updatedAt || initialData.createdAt).toLocaleDateString('id-ID', {
+                                weekday: 'long',
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}
+                        </p>
+                    </div>
+                )}
             </div>
         </form>
     );

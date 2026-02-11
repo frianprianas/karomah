@@ -11,9 +11,10 @@ interface BookFrameProps {
     prevLink?: string | null;
     nextLink?: string | null;
     day?: number;
+    singlePage?: boolean;
 }
 
-export default function BookFrame({ children, prevLink, nextLink, day }: BookFrameProps) {
+export default function BookFrame({ children, prevLink, nextLink, day, singlePage = false }: BookFrameProps) {
     return (
         <div className="min-h-screen bg-[#2c1810] flex items-center justify-center p-2 sm:p-8 overflow-hidden relative">
             {/* Wood Texture Background Pattern */}
@@ -24,17 +25,29 @@ export default function BookFrame({ children, prevLink, nextLink, day }: BookFra
             <div className="relative w-full max-w-5xl aspect-[4/3] sm:aspect-[3/2] flex perspective-1000">
 
                 {/* Book Cover/Binding Effect */}
-                <div className="absolute inset-0 bg-[#fdfbf7] rounded-sm sm:rounded-md shadow-2xl flex">
-                    {/* Left Page Background */}
-                    <div className="w-1/2 h-full bg-[#fdfbf7] border-r border-gray-200 rounded-l-sm sm:rounded-l-md relative shadow-inner">
-                        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-200/50 to-transparent"></div>
-                    </div>
-                    {/* Right Page Background */}
-                    <div className="w-1/2 h-full bg-[#fdfbf7] rounded-r-sm sm:rounded-r-md relative shadow-inner">
-                        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-200/50 to-transparent"></div>
-                    </div>
-                    {/* Center Binding */}
-                    <div className="absolute left-1/2 top-0 bottom-0 w-4 -ml-2 bg-gradient-to-r from-gray-300 via-gray-100 to-gray-300 rounded-sm shadow-inner z-20"></div>
+                <div className="absolute inset-0 bg-[#fdfbf7] rounded-sm sm:rounded-md shadow-2xl flex overflow-hidden">
+                    {singlePage ? (
+                        // Single Page Background Layout (No Binding)
+                        <div className="w-full h-full bg-[#fdfbf7] relative shadow-inner bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')]">
+                            {/* Subtle gradients for depth */}
+                            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-200/50 to-transparent pointer-events-none"></div>
+                            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-200/50 to-transparent pointer-events-none"></div>
+                        </div>
+                    ) : (
+                        // Double Page Background Layout (With Binding)
+                        <>
+                            {/* Left Page Background */}
+                            <div className="w-1/2 h-full bg-[#fdfbf7] border-r border-gray-200 rounded-l-sm sm:rounded-l-md relative shadow-inner">
+                                <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-200/50 to-transparent"></div>
+                            </div>
+                            {/* Right Page Background */}
+                            <div className="w-1/2 h-full bg-[#fdfbf7] rounded-r-sm sm:rounded-r-md relative shadow-inner">
+                                <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-200/50 to-transparent"></div>
+                            </div>
+                            {/* Center Binding */}
+                            <div className="absolute left-1/2 top-0 bottom-0 w-4 -ml-2 bg-gradient-to-r from-gray-300 via-gray-100 to-gray-300 rounded-sm shadow-inner z-20"></div>
+                        </>
+                    )}
                 </div>
 
                 {/* Content Container */}

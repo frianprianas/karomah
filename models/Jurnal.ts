@@ -44,6 +44,10 @@ export interface IJurnal extends Document {
     };
     jam_tidur: string;
     catatan_guru?: string;
+    nama_guru_komentar?: string;
+    dikomentari_pada?: Date;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
 const JurnalSchema: Schema = new Schema({
@@ -88,7 +92,9 @@ const JurnalSchema: Schema = new Schema({
         isi: { type: String, default: '' }
     },
     jam_tidur: { type: String, default: '' },
-    catatan_guru: { type: String, default: '' }
+    catatan_guru: { type: String, default: '' },
+    nama_guru_komentar: { type: String, default: '' },
+    dikomentari_pada: { type: Date }
 }, { timestamps: true });
 
 JurnalSchema.index({ nis: 1, tgl_jurnal: 1 }, { unique: true });

@@ -28,7 +28,13 @@ export async function POST(req: Request) {
         // Target by NIS and Date, which is the unique constraint
         const updateResult = await Jurnal.collection.updateOne(
             { nis: nis, tgl_jurnal: Number(day) },
-            { $set: { catatan_guru: catatan || '' } }
+            {
+                $set: {
+                    catatan_guru: catatan || '',
+                    dikomentari_pada: new Date(),
+                    nama_guru_komentar: (session as any).name || 'Guru Pembina'
+                }
+            }
         );
 
         console.log('Update Result:', updateResult);
