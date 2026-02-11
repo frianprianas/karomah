@@ -102,6 +102,18 @@ export default function AdminManagement() {
         (item.nis || item.nipy)?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    // Pagination Logic
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 15;
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab, searchTerm]);
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentData = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+
     return (
         <div className="w-full">
             {/* Tab Selector */}
@@ -164,10 +176,10 @@ export default function AdminManagement() {
                         <tbody className="text-[#3e2723]">
                             {loading ? (
                                 <tr><td colSpan={4} className="p-10 text-center italic">Membuka lembaran data...</td></tr>
-                            ) : filteredData.length === 0 ? (
+                            ) : currentData.length === 0 ? (
                                 <tr><td colSpan={4} className="p-10 text-center italic text-[#795548]">Belum ada data yang tertulis.</td></tr>
                             ) : (
-                                filteredData.map((item) => (
+                                currentData.map((item) => (
                                     <tr key={item._id} className="hover:bg-[#d7ccc8]/30 transition-colors border-b border-[#d7ccc8]/50">
                                         <td className="p-4 whitespace-nowrap">{item.nis || item.nipy}</td>
                                         <td className="p-4 font-bold">{item.nama}</td>
@@ -197,6 +209,34 @@ export default function AdminManagement() {
                     </table>
                 </div>
             </div>
+
+            {/* Pagination Controls */}
+            {!loading && filteredData.length > itemsPerPage && (
+                <div className="flex justify-between items-center mt-4 px-2">
+                    <p className="text-sm text-[#8d6e63] font-serif italic">
+                        Menampilkan {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredData.length)} dari {filteredData.length} data
+                    </p>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className="px-4 py-2 bg-[#f0e6d2] border border-[#d7ccc8] text-[#5d4037] rounded-sm disabled:opacity-50 hover:bg-[#d7ccc8]/50 font-serif text-sm transition-colors"
+                        >
+                            Sebelumnya
+                        </button>
+                        <span className="px-4 py-2 bg-[#5d4037] text-[#f0e6d2] rounded-sm font-serif text-sm flex items-center shadow-sm">
+                            Halaman {currentPage}
+                        </span>
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredData.length / itemsPerPage)))}
+                            disabled={currentPage === Math.ceil(filteredData.length / itemsPerPage)}
+                            className="px-4 py-2 bg-[#f0e6d2] border border-[#d7ccc8] text-[#5d4037] rounded-sm disabled:opacity-50 hover:bg-[#d7ccc8]/50 font-serif text-sm transition-colors"
+                        >
+                            Berikutnya
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Modal */}
             {showModal && (
