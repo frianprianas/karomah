@@ -71,6 +71,17 @@ export default function LoginForm() {
                     <div className="hidden md:block absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/pattern-light.png')] opacity-30"></div>
 
                     <div className="relative z-10 flex flex-col items-center text-center animate-in fade-in slide-in-from-top-4 duration-700">
+
+                        {/* Judul Tambahan di Atas Logo */}
+                        <div className="mb-6 md:mb-8 text-center space-y-1">
+                            <h2 className="font-serif text-lg md:text-xl text-[#5d4037] font-semibold tracking-wide">
+                                Catatan Harian Bulan Ramadan
+                            </h2>
+                            <p className="font-serif text-xl md:text-2xl text-[#3e2723] font-medium" dir="rtl" lang="ar">
+                                ملاحظات يومية لشهر رمضان
+                            </p>
+                        </div>
+
                         <div className="mb-3 md:mb-4 relative">
                             <div className="absolute -inset-4 bg-[#8d6e63]/20 blur-xl rounded-full md:hidden"></div>
                             <Image
