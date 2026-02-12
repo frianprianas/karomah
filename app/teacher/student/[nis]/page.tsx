@@ -1,3 +1,4 @@
+
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import Navbar from '@/components/Navbar';
@@ -6,7 +7,7 @@ import Jurnal from '@/models/Jurnal';
 import Siswa from '@/models/Siswa';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Check, X, Clock, Moon, Sun, BookOpen, Activity, Heart, Users } from 'lucide-react';
 import TeacherNoteInput from '@/components/TeacherNoteInput';
 
 export const dynamic = 'force-dynamic';
@@ -21,6 +22,10 @@ async function getStudentData(nis: string) {
         journals: journals.map(j => ({ ...j, _id: (j as any)._id.toString() }))
     };
 }
+
+// Helper untuk format sholat
+const PRAYER_NAMES = ['subuh', 'dhuhur', 'ashar', 'magrib', 'isya'];
+const SUNNAH_NAMES = ['rawatib', 'dhuha', 'tarawih', 'tahajud', 'taubat', 'mutlak', 'hajat'];
 
 export default async function StudentJournalPage({ params }: { params: Promise<{ nis: string }> }) {
     const session = await getSession();
@@ -48,7 +53,7 @@ export default async function StudentJournalPage({ params }: { params: Promise<{
         <div className="min-h-screen bg-[#fdfbf7] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] pb-20 font-serif">
             <Navbar user={session as any} />
 
-            <main className="max-w-3xl mx-auto p-4 sm:p-6 flex flex-col items-center">
+            <main className="max-w-4xl mx-auto p-4 sm:p-6 flex flex-col items-center">
                 <div className="w-full">
                     <Link href="/teacher" className="inline-flex items-center text-[#8d6e63] mb-6 hover:text-[#3e2723] hover:underline transition-all group">
                         <ChevronLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
@@ -82,7 +87,7 @@ export default async function StudentJournalPage({ params }: { params: Promise<{
                         </div>
                     </div>
 
-                    <div className="space-y-8">
+                    <div className="space-y-12">
                         {journals.length === 0 ? (
                             <div className="text-center py-16 text-[#8d6e63] italic bg-white/50 rounded-sm border-2 border-dashed border-[#d7ccc8]">
                                 Belum ada lembaran jurnal yang tertulis.
@@ -90,87 +95,235 @@ export default async function StudentJournalPage({ params }: { params: Promise<{
                         ) : (
                             journals.map((journal: any) => (
                                 <div key={journal._id} className="bg-white rounded-sm border-2 border-[#d7ccc8] overflow-hidden shadow-sm relative">
-                                    <div className="absolute inset-1 border border-dashed border-[#8d6e63] opacity-5 pointer-events-none"></div>
+                                    <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                                        <Image src="/logo.jpg" alt="Watermark" width={100} height={100} className="grayscale" />
+                                    </div>
 
-                                    <div className="bg-[#f0e6d2] px-6 py-4 border-b-2 border-[#d7ccc8] flex justify-between items-center bg-[url('https://www.transparenttextures.com/patterns/parchment.png')]">
-                                        <h3 className="font-bold text-[#3e2723] text-lg">Ramadan Hari ke-{journal.tgl_jurnal}</h3>
-                                        <div className="text-right">
-                                            <span className="text-xs text-[#795548] italic block">Tgl Pengisian:</span>
+                                    <div className="bg-[#f0e6d2] px-6 py-4 border-b-2 border-[#d7ccc8] flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[url('https://www.transparenttextures.com/patterns/parchment.png')] gap-2">
+                                        <div className="flex items-center gap-3">
+                                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-[#5d4037] text-[#fdfbf7] font-bold text-sm border border-[#3e2723]">
+                                                {journal.tgl_jurnal}
+                                            </span>
+                                            <h3 className="font-bold text-[#3e2723] text-lg">Ramadan Hari ke-{journal.tgl_jurnal}</h3>
+                                        </div>
+                                        <div className="text-left sm:text-right">
+                                            <span className="text-xs text-[#795548] italic block">Diisi pada:</span>
                                             <span className="text-xs font-bold text-[#5d4037]">
-                                                {new Date(journal.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                                {new Date(journal.createdAt).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                             </span>
                                         </div>
                                     </div>
 
-                                    <div className="p-6">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 text-sm">
-                                            {/* Summary of key activities */}
-                                            <div className="space-y-3">
-                                                <div className="flex justify-between border-b border-[#d7ccc8]/50 pb-2">
-                                                    <span className="text-[#795548]">Jam Bangun</span>
-                                                    <span className="font-bold text-[#3e2723]">{journal.jam_bangun || '-'}</span>
+                                    <div className="p-6 sm:p-8">
+                                        {/* GRID UTAMA */}
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+
+                                            {/* KOLOM KIRI: IBADAH RUTIN */}
+                                            <div className="space-y-6">
+                                                {/* Waktu Tidur & Bangun */}
+                                                <div className="flex items-center gap-4 bg-[#fdfbf7] p-3 rounded border border-[#efebe9]">
+                                                    <div className="flex-1">
+                                                        <span className="text-[10px] uppercase text-[#8d6e63] font-bold tracking-wider flex items-center gap-1 mb-1">
+                                                            <Moon className="w-3 h-3" /> Jam Tidur
+                                                        </span>
+                                                        <span className="font-bold text-[#3e2723] text-lg">{journal.jam_tidur || '-'}</span>
+                                                    </div>
+                                                    <div className="w-px h-8 bg-[#d7ccc8]"></div>
+                                                    <div className="flex-1">
+                                                        <span className="text-[10px] uppercase text-[#8d6e63] font-bold tracking-wider flex items-center gap-1 mb-1">
+                                                            <Sun className="w-3 h-3" /> Jam Bangun
+                                                        </span>
+                                                        <span className="font-bold text-[#3e2723] text-lg">{journal.jam_bangun || '-'}</span>
+                                                    </div>
+                                                    <div className="w-px h-8 bg-[#d7ccc8]"></div>
+                                                    <div className="flex-1">
+                                                        <span className="text-[10px] uppercase text-[#8d6e63] font-bold tracking-wider flex items-center gap-1 mb-1">
+                                                            🍽️ Sahur
+                                                        </span>
+                                                        <span className={`font-bold text-sm ${journal.sahur ? 'text-green-700' : 'text-red-600'}`}>
+                                                            {journal.sahur ? 'YA' : 'TIDAK'}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <div className="flex justify-between border-b border-[#d7ccc8]/50 pb-2">
-                                                    <span className="text-[#795548]">Sahur</span>
-                                                    <span className={journal.sahur ? "text-green-700 font-bold" : "text-red-700 font-bold"}>
-                                                        {journal.sahur ? "Dilaksanakan" : "Tidak"}
-                                                    </span>
+
+                                                {/* Sholat Wajib Detail */}
+                                                <div>
+                                                    <h4 className="text-sm font-bold text-[#5d4037] border-b border-[#d7ccc8] pb-2 mb-3 flex items-center gap-2">
+                                                        <Clock className="w-4 h-4" /> Sholat Wajib
+                                                    </h4>
+                                                    <div className="grid grid-cols-5 gap-2">
+                                                        {PRAYER_NAMES.map((p) => (
+                                                            <div key={p} className={`flex flex-col items-center p-2 rounded border ${journal.sholat_wajib[p] ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                                                                <span className="text-[10px] uppercase font-bold text-[#5d4037] mb-1">{p}</span>
+                                                                {journal.sholat_wajib[p] ?
+                                                                    <Check className="w-5 h-5 text-green-600" /> :
+                                                                    <X className="w-5 h-5 text-red-500" />
+                                                                }
+                                                            </div>
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                                <div className="flex justify-between border-b border-[#d7ccc8]/50 pb-2">
-                                                    <span className="text-[#795548]">Sholat Wajib</span>
-                                                    <span className="font-bold text-[#3e2723]">
-                                                        {Object.values(journal.sholat_wajib).filter(Boolean).length} / 5 Waktu
-                                                    </span>
+
+                                                {/* Sholat Sunnah Detail */}
+                                                <div>
+                                                    <h4 className="text-sm font-bold text-[#5d4037] border-b border-[#d7ccc8] pb-2 mb-3 flex items-center gap-2">
+                                                        <Heart className="w-4 h-4" /> Sholat Sunnah
+                                                    </h4>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {SUNNAH_NAMES.filter(s => journal.sholat_sunah[s]).length > 0 ? (
+                                                            SUNNAH_NAMES.filter(s => journal.sholat_sunah[s]).map(s => (
+                                                                <span key={s} className="px-3 py-1 bg-[#efebe9] text-[#5d4037] text-xs font-bold rounded-full border border-[#d7ccc8] capitalize">
+                                                                    {s}
+                                                                </span>
+                                                            ))
+                                                        ) : (
+                                                            <span className="text-xs text-gray-400 italic">Tidak ada sholat sunnah yang dikerjakan.</span>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                <div className="flex justify-between border-b border-[#d7ccc8]/50 pb-2">
-                                                    <span className="text-[#795548]">Sholat Sunnah</span>
-                                                    <span className="font-bold text-[#3e2723]">
-                                                        {Object.values(journal.sholat_sunah).filter(Boolean).length} Amalan
-                                                    </span>
+
+                                                {/* Tadarus Detail */}
+                                                <div>
+                                                    <h4 className="text-sm font-bold text-[#5d4037] border-b border-[#d7ccc8] pb-2 mb-3 flex items-center gap-2">
+                                                        <BookOpen className="w-4 h-4" /> Tadarus Al-Qur'an
+                                                    </h4>
+                                                    <div className="bg-[#fdfbf7] p-3 rounded border border-[#efebe9] flex justify-between items-center">
+                                                        <div>
+                                                            <span className="text-[10px] text-[#8d6e63] font-bold uppercase block">Surat</span>
+                                                            <span className="text-[#3e2723] font-serif font-medium text-lg">{journal.tadarus?.surat || '-'}</span>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <span className="text-[10px] text-[#8d6e63] font-bold uppercase block">Ayat</span>
+                                                            <span className="text-[#3e2723] font-medium">{journal.tadarus?.ayat || '-'}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            <div className="space-y-3">
-                                                <div className="flex justify-between border-b border-[#d7ccc8]/50 pb-2">
-                                                    <span className="text-[#795548]">Tadarus</span>
-                                                    <span className="font-bold text-[#3e2723] whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">
-                                                        {journal.tadarus?.surat ? `${journal.tadarus.surat}` : '-'}
-                                                    </span>
+                                            {/* KOLOM KANAN: AKTIFITAS & LHSAN */}
+                                            <div className="space-y-6">
+
+                                                {/* Aktifitas Harian (Olahraga, Bantu Ortu, Sosial) */}
+                                                <div>
+                                                    <h4 className="text-sm font-bold text-[#5d4037] border-b border-[#d7ccc8] pb-2 mb-3 flex items-center gap-2">
+                                                        <Activity className="w-4 h-4" /> Kegiatan Produktif
+                                                    </h4>
+
+                                                    <div className="space-y-4">
+                                                        {/* Olahraga */}
+                                                        <div className={`p-3 rounded border ${journal.olah_raga?.ya_tidak ? 'bg-[#f1f8e9] border-[#c5e1a5]' : 'bg-gray-50 border-gray-200'}`}>
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <div className={`w-2 h-2 rounded-full ${journal.olah_raga?.ya_tidak ? 'bg-green-600' : 'bg-gray-400'}`}></div>
+                                                                <span className="font-bold text-xs uppercase text-[#5d4037]">Olahraga</span>
+                                                            </div>
+                                                            {journal.olah_raga?.ya_tidak && (
+                                                                <p className="text-sm text-[#3e2723] mt-1 pl-4 border-l-2 border-green-200">
+                                                                    "{journal.olah_raga.kegiatan || 'Tanpa keterangan'}"
+                                                                </p>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Bantu Ortu */}
+                                                        <div className={`p-3 rounded border ${journal.bantu_ortu?.ya_tidak ? 'bg-[#f1f8e9] border-[#c5e1a5]' : 'bg-gray-50 border-gray-200'}`}>
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <div className={`w-2 h-2 rounded-full ${journal.bantu_ortu?.ya_tidak ? 'bg-green-600' : 'bg-gray-400'}`}></div>
+                                                                <span className="font-bold text-xs uppercase text-[#5d4037]">Bantu Orang Tua</span>
+                                                            </div>
+                                                            {journal.bantu_ortu?.ya_tidak && (
+                                                                <p className="text-sm text-[#3e2723] mt-1 pl-4 border-l-2 border-green-200">
+                                                                    "{journal.bantu_ortu.kegiatan || 'Tanpa keterangan'}"
+                                                                </p>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Aktifitas Sosial */}
+                                                        <div className={`p-3 rounded border ${journal.aktifitas_sosial?.ya_tidak ? 'bg-[#f1f8e9] border-[#c5e1a5]' : 'bg-gray-50 border-gray-200'}`}>
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <div className={`w-2 h-2 rounded-full ${journal.aktifitas_sosial?.ya_tidak ? 'bg-green-600' : 'bg-gray-400'}`}></div>
+                                                                <span className="font-bold text-xs uppercase text-[#5d4037]">Aktifitas Sosial</span>
+                                                            </div>
+                                                            {journal.aktifitas_sosial?.ya_tidak && (
+                                                                <div className="pl-4 border-l-2 border-green-200 mt-1">
+                                                                    <p className="text-sm text-[#3e2723] mb-2">
+                                                                        "{journal.aktifitas_sosial.kegiatan || 'Tanpa keterangan'}"
+                                                                    </p>
+                                                                    {journal.aktifitas_sosial.foto && (
+                                                                        <div className="w-24 h-24 bg-gray-100 rounded border border-gray-300 overflow-hidden cursor-pointer hover:scale-105 transition-transform">
+                                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                            <img src={journal.aktifitas_sosial.foto} alt="Foto Sosial" className="w-full h-full object-cover" />
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </div>
 
-                                                <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-1">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className={`w-3 h-3 rounded-full ${journal.olah_raga?.ya_tidak ? 'bg-green-600' : 'bg-[#d7ccc8]'}`}></div>
-                                                        <span className="text-[#795548] text-[11px] uppercase tracking-wider">Olahraga</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className={`w-3 h-3 rounded-full ${journal.bantu_ortu?.ya_tidak ? 'bg-green-600' : 'bg-[#d7ccc8]'}`}></div>
-                                                        <span className="text-[#795548] text-[11px] uppercase tracking-wider">Bantu Ortu</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className={`w-3 h-3 rounded-full ${journal.aktifitas_sosial?.ya_tidak ? 'bg-green-600' : 'bg-[#d7ccc8]'}`}></div>
-                                                        <span className="text-[#795548] text-[11px] uppercase tracking-wider">Sosial</span>
-                                                    </div>
+                                                {/* Catatan Ihsan */}
+                                                <div>
+                                                    <h4 className="text-sm font-bold text-[#5d4037] border-b border-[#d7ccc8] pb-2 mb-3 flex items-center gap-2">
+                                                        <Users className="w-4 h-4" /> Catatan Ihsan
+                                                    </h4>
+                                                    {(journal.catatan_ihsan?.isi || journal.catatan_ihsan?.foto) ? (
+                                                        <div className="bg-[#fdfbf7] p-4 rounded border border-[#d7ccc8] relative">
+                                                            <div className="absolute top-0 left-0 w-1 h-full bg-[#8d6e63]"></div>
+
+                                                            {journal.catatan_ihsan?.isi && (
+                                                                <p className="italic text-[#3e2723] text-sm leading-relaxed mb-3">
+                                                                    "{journal.catatan_ihsan.isi}"
+                                                                </p>
+                                                            )}
+
+                                                            {/* Foto Catatan Ihsan */}
+                                                            {journal.catatan_ihsan?.foto && (
+                                                                <div className="mb-3 inline-block bg-white p-1 border border-gray-200 rounded-sm">
+                                                                    <div className="w-full max-w-[200px] h-32 bg-gray-100 overflow-hidden">
+                                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                        <img src={journal.catatan_ihsan.foto} alt="Bukti Ihsan" className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            <div className="text-right">
+                                                                <span className="text-[10px] text-[#8d6e63] font-bold uppercase">Sumber: </span>
+                                                                <span className="text-xs font-bold text-[#5d4037]">{journal.catatan_ihsan?.sumber || '-'}</span>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-xs text-gray-400 italic">Tidak ada catatan.</p>
+                                                    )}
                                                 </div>
+
                                             </div>
-
-                                            {journal.catatan_ihsan?.isi && (
-                                                <div className="col-span-1 sm:col-span-2 bg-[#fdfbf7] p-4 rounded-sm border border-[#d7ccc8] mt-2 relative">
-                                                    <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#8d6e63]"></div>
-                                                    <p className="text-[10px] font-bold text-[#8d6e63] uppercase tracking-widest mb-2">Ringkasan Ceramah / Ihsan</p>
-                                                    <p className="italic text-[#3e2723] leading-relaxed">"{journal.catatan_ihsan.isi}"</p>
-                                                    <p className="text-[11px] text-right text-[#795548] mt-2 font-bold">— {journal.catatan_ihsan.sumber}</p>
-                                                </div>
-                                            )}
                                         </div>
 
-                                        {/* Teacher Note Input Component */}
-                                        <TeacherNoteInput
-                                            journalId={journal._id || (journal as any)._id}
-                                            nis={student.nis}
-                                            day={journal.tgl_jurnal}
-                                            initialNote={journal.catatan_guru}
-                                        />
+                                        {/* FOOTER: TANDA TANGAN & KOMENTAR GURU */}
+                                        <div className="mt-8 pt-6 border-t border-[#d7ccc8] flex flex-col md:flex-row gap-8 items-start">
+
+                                            {/* Bagian Tanda Tangan */}
+                                            <div className="w-full md:w-1/3 flex flex-col items-center">
+                                                <p className="text-[10px] font-bold text-[#8d6e63] uppercase tracking-widest mb-2">Tanda Tangan Siswa</p>
+                                                <div className="w-full h-24 bg-white border-2 border-dashed border-[#d7ccc8] rounded flex items-center justify-center overflow-hidden">
+                                                    {journal.tanda_tangan ? (
+                                                        /* eslint-disable-next-line @next/next/no-img-element */
+                                                        <img src={journal.tanda_tangan} alt="TTD" className="max-h-full max-w-full object-contain" />
+                                                    ) : (
+                                                        <span className="text-xs text-gray-300 italic">Belum ditandatangani</span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Bagian Komentar Guru */}
+                                            <div className="w-full md:w-2/3">
+                                                <p className="text-[10px] font-bold text-[#8d6e63] uppercase tracking-widest mb-2">Catatan / Komentar Guru</p>
+                                                <TeacherNoteInput
+                                                    journalId={journal._id || (journal as any)._id}
+                                                    nis={student.nis}
+                                                    day={journal.tgl_jurnal}
+                                                    initialNote={journal.catatan_guru}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             ))
@@ -181,3 +334,4 @@ export default async function StudentJournalPage({ params }: { params: Promise<{
         </div>
     );
 }
+
