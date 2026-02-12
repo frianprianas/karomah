@@ -24,7 +24,8 @@ export async function POST(req: Request) {
             bantu_ortu,
             aktifitas_sosial,
             catatan_ihsan,
-            jam_tidur
+            jam_tidur,
+            tanda_tangan
         } = await req.json();
 
         // Upsert journal entry using $set to only update specific fields
@@ -41,7 +42,8 @@ export async function POST(req: Request) {
                     bantu_ortu,
                     aktifitas_sosial,
                     catatan_ihsan,
-                    jam_tidur
+                    jam_tidur,
+                    tanda_tangan
                 }
             },
             { new: true, upsert: true }
