@@ -5,7 +5,9 @@ import connectDB from '@/lib/db';
 import Siswa from '@/models/Siswa';
 import Jurnal from '@/models/Jurnal';
 import TeacherDashboardClient from '@/components/TeacherDashboardClient';
+import Link from 'next/link';
 import Image from 'next/image';
+import { FileText } from 'lucide-react';
 
 async function getStudentsWithProgress() {
     await connectDB();
@@ -66,6 +68,17 @@ export default async function TeacherDashboard() {
                         <p className="text-[#8d6e63] text-sm mt-1 uppercase tracking-[0.3em] font-bold">SMK Bakti Nusantara 666</p>
                         <p className="text-[#795548] italic text-xs">Aplikasi Karomah - Jurnal Ramadan 1447 H</p>
                     </div>
+                </div>
+
+                <div className="flex justify-center mb-10">
+                    <Link
+                        href="/teacher/logs"
+                        className="flex items-center gap-2 px-8 py-3 bg-[#5d4037] text-[#fdfbf7] rounded-full font-serif font-bold shadow-lg hover:bg-[#3e2723] hover:shadow-xl transition-all hover:-translate-y-1 active:scale-95 border-2 border-[#8d6e63] group relative overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                        <FileText className="w-5 h-5 relative z-10" />
+                        <span className="relative z-10">Pantau Log Aktifitas Siswa Terbaru</span>
+                    </Link>
                 </div>
 
                 <TeacherDashboardClient groupedStudents={groupedStudents} />

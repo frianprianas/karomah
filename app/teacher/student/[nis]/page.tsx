@@ -31,12 +31,16 @@ const SUNNAH_NAMES = ['rawatib', 'dhuha', 'tarawih', 'tahajud', 'taubat', 'mutla
 export default async function StudentJournalPage({ params }: { params: Promise<{ nis: string }> }) {
     const session = await getSession();
 
-    if (!session || session.role !== 'guru') {
+    // Izinkan Guru dan Admin
+    if (!session || (session.role !== 'guru' && session.role !== 'admin')) {
         redirect('/');
     }
 
     const { nis } = await params;
     const { student, journals } = await getStudentData(nis);
+
+    const backLink = session.role === 'admin' ? '/admin/logs' : '/teacher';
+    const backText = session.role === 'admin' ? 'Kembali ke Log Aktifitas' : 'Kembali ke Daftar Santri';
 
     if (!student) {
         return (
@@ -44,7 +48,7 @@ export default async function StudentJournalPage({ params }: { params: Promise<{
                 <Navbar user={session as any} />
                 <div className="max-w-4xl mx-auto text-center mt-10">
                     <h1 className="text-xl font-bold text-red-600">Siswa tidak ditemukan</h1>
-                    <Link href="/teacher" className="text-[#8d6e63] hover:underline mt-4 inline-block">Kembali</Link>
+                    <Link href={backLink} className="text-[#8d6e63] hover:underline mt-4 inline-block">Kembali</Link>
                 </div>
             </div>
         );
@@ -56,9 +60,9 @@ export default async function StudentJournalPage({ params }: { params: Promise<{
 
             <main className="max-w-4xl mx-auto p-4 sm:p-6 flex flex-col items-center">
                 <div className="w-full">
-                    <Link href="/teacher" className="inline-flex items-center text-[#8d6e63] mb-6 hover:text-[#3e2723] hover:underline transition-all group">
+                    <Link href={backLink} className="inline-flex items-center text-[#8d6e63] mb-6 hover:text-[#3e2723] hover:underline transition-all group">
                         <ChevronLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
-                        Kembali ke Daftar Santri
+                        {backText}
                     </Link>
 
                     {/* Header Card */}
@@ -276,8 +280,8 @@ export default async function StudentJournalPage({ params }: { params: Promise<{
                                                             {/* Tipe Badge & Links */}
                                                             <div className='flex flex-wrap gap-2 mb-3'>
                                                                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase inline-flex items-center gap-1 border ${(journal.catatan_ihsan.tipe === 'Daring')
-                                                                        ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                                                        : 'bg-green-50 text-green-700 border-green-200'
+                                                                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                                                    : 'bg-green-50 text-green-700 border-green-200'
                                                                     }`}>
                                                                     {journal.catatan_ihsan.tipe === 'Daring' ? <Globe className="w-3 h-3" /> : <MapPin className="w-3 h-3" />}
                                                                     {journal.catatan_ihsan.tipe || 'Langsung'}

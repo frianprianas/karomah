@@ -281,13 +281,24 @@ export default function AdminManagement() {
 
                             <div>
                                 <label className="block text-sm text-[#5d4037] mb-1">{activeTab === 'siswa' ? 'Kelas' : 'Keterangan'}</label>
-                                <input
-                                    type="text"
-                                    required={activeTab === 'siswa'}
-                                    value={activeTab === 'siswa' ? formData.kelas : formData.ket}
-                                    onChange={(e) => setFormData({ ...formData, [activeTab === 'siswa' ? 'kelas' : 'ket']: e.target.value })}
-                                    className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:border-[#5d4037] outline-none text-[#3e2723]"
-                                />
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        required={activeTab === 'siswa'}
+                                        list={activeTab === 'siswa' ? "classList" : undefined}
+                                        value={activeTab === 'siswa' ? formData.kelas : formData.ket}
+                                        onChange={(e) => setFormData({ ...formData, [activeTab === 'siswa' ? 'kelas' : 'ket']: e.target.value })}
+                                        className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:border-[#5d4037] outline-none text-[#3e2723]"
+                                        placeholder={activeTab === 'siswa' ? "Pilih atau ketik kelas baru..." : "Keterangan guru..."}
+                                    />
+                                    {activeTab === 'siswa' && (
+                                        <datalist id="classList">
+                                            {Array.from(new Set(data.map((item: any) => item.kelas))).filter(Boolean).sort().map((k: any) => (
+                                                <option key={k} value={k} />
+                                            ))}
+                                        </datalist>
+                                    )}
+                                </div>
                             </div>
 
                             <div>
