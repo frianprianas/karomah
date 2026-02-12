@@ -100,7 +100,7 @@ export default async function StudentJournalPage({ params }: { params: Promise<{
                         ) : (
                             journals.map((journal: any) => (
                                 <div key={journal._id} className="bg-white rounded-sm border-2 border-[#d7ccc8] overflow-hidden shadow-sm relative">
-                                    <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                                    <div className="absolute -top-6 right-2 p-4 opacity-10 pointer-events-none">
                                         <Image src="/logo.jpg" alt="Watermark" width={100} height={100} className="grayscale" />
                                     </div>
 

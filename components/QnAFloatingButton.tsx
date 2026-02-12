@@ -297,7 +297,7 @@ export default function QnAFloatingButton() {
                                         <select
                                             value={selectedTeacher}
                                             onChange={(e) => setSelectedTeacher(e.target.value)}
-                                            className="w-full p-3 border border-[#d7ccc8] rounded bg-white focus:ring-[#8d6e63] focus:border-[#5d4037] outline-none"
+                                            className="w-full p-3 border border-[#d7ccc8] rounded bg-white focus:ring-[#8d6e63] focus:border-[#5d4037] outline-none text-[#3e2723]"
                                             required
                                         >
                                             <option value="">-- Pilih Ustadz/Ustadzah --</option>
@@ -312,7 +312,7 @@ export default function QnAFloatingButton() {
                                         <textarea
                                             value={questionText}
                                             onChange={(e) => setQuestionText(e.target.value)}
-                                            className="w-full p-3 border border-[#d7ccc8] rounded bg-white focus:ring-[#8d6e63] focus:border-[#5d4037] outline-none min-h-[120px]"
+                                            className="w-full p-3 border border-[#d7ccc8] rounded bg-white focus:ring-[#8d6e63] focus:border-[#5d4037] outline-none min-h-[120px] text-[#3e2723]"
                                             placeholder="Tulis pertanyaanmu dengan sopan dan jelas..."
                                             required
                                             maxLength={500}

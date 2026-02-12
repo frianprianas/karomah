@@ -206,7 +206,7 @@ function TeacherQnAContent() {
                                 <textarea
                                     value={replyText}
                                     onChange={(e) => setReplyText(e.target.value)}
-                                    className="w-full p-3 border border-[#d7ccc8] rounded bg-[#fdfbf7] focus:ring-[#8d6e63] outline-none min-h-[150px]"
+                                    className="w-full p-3 border border-[#d7ccc8] rounded bg-[#fdfbf7] focus:ring-[#8d6e63] outline-none min-h-[150px] text-[#3e2723]"
                                     placeholder="Tulis jawaban yang membantu dan jelas..."
                                     required
                                 />
