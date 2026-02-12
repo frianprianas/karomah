@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Navbar from '@/components/Navbar';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Search, Calendar, ChevronRight } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -15,7 +14,7 @@ interface LogEntry {
     tanggal_isi: string;
 }
 
-export default function LogsPage() {
+function TeacherLogsContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -65,20 +64,11 @@ export default function LogsPage() {
         if (page > 1) params.set('page', page.toString());
         if (search) params.set('search', search);
 
-        // Gunakan replace agar history tidak numpuk terlalu banyak
         router.replace(`/teacher/logs?${params.toString()}`);
     }, [page, search, router]);
 
     return (
         <div className="min-h-screen bg-[#fdfbf7] font-serif">
-            {/* Navbar Placeholder - as we are client component, assume Navbar handles session well or passed as prop. 
-                Wait, Navbar needs 'user' prop usually. 
-                Since this is 'use client', we can't easily get session here without AuthProvider or passing from parent layout.
-                For now, let's skip Navbar prop requirement or use a dummy if strict type. 
-                Ideally, layout.tsx handles Navbar. But here assume we manually put it.
-                I will skip rendering Navbar component directly here to avoid session prop issue, 
-                OR better: just render a simple Header for this page.
-            */}
 
             <header className="bg-[#5d4037] text-[#fdfbf7] p-4 shadow-md sticky top-0 z-50">
                 <div className="max-w-6xl mx-auto flex justify-between items-center">
@@ -177,5 +167,13 @@ export default function LogsPage() {
                 )}
             </main>
         </div>
+    );
+}
+
+export default function LogsPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-serif italic text-[#8d6e63]">Memuat Log Aktifitas...</div>}>
+            <TeacherLogsContent />
+        </Suspense>
     );
 }

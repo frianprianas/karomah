@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Search, Calendar, ChevronRight } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -14,7 +14,7 @@ interface LogEntry {
     tanggal_isi: string;
 }
 
-export default function AdminLogsPage() {
+function AdminLogsContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -167,5 +167,13 @@ export default function AdminLogsPage() {
                 )}
             </main>
         </div>
+    );
+}
+
+export default function AdminLogsPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-serif italic text-[#8d6e63]">Memuat Log Aktifitas...</div>}>
+            <AdminLogsContent />
+        </Suspense>
     );
 }
