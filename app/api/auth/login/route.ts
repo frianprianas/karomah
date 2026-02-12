@@ -5,11 +5,24 @@ import Siswa from '@/models/Siswa';
 import Guru from '@/models/Guru';
 import Admin from '@/models/Admin';
 import { signToken } from '@/lib/auth';
+import { rateLimit } from '@/lib/rate-limit'; // Import
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 
 export async function POST(req: Request) {
     try {
+        // --- Rate Limiting ---
+        const ip = req.headers.get('x-forwarded-for') || 'unknown';
+        const limiter = rateLimit(ip, 5, 60000); // 5 login per menit per IP
+
+        if (!limiter.success) {
+            return NextResponse.json(
+                { error: 'Terlalu banyak percobaan login. Tunggu 1 menit.' },
+                { status: 429 }
+            );
+        }
+        // ---------------------
+
         await connectDB();
         const { id, password, role } = await req.json();
 

@@ -360,7 +360,7 @@ export default async function StudentJournalPage({ params }: { params: Promise<{
 
                                             {/* Bagian Tanda Tangan */}
                                             <div className="w-full md:w-1/3 flex flex-col items-center">
-                                                <p className="text-[10px] font-bold text-[#8d6e63] uppercase tracking-widest mb-2">Tanda Tangan Siswa</p>
+                                                <p className="text-[10px] font-bold text-[#8d6e63] uppercase tracking-widest mb-2">Tanda Tangan Pemateri</p>
                                                 <div className="w-full h-24 bg-white border-2 border-dashed border-[#d7ccc8] rounded flex items-center justify-center overflow-hidden">
                                                     {journal.tanda_tangan ? (
                                                         /* eslint-disable-next-line @next/next/no-img-element */

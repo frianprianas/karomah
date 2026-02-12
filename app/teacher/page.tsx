@@ -4,10 +4,13 @@ import Navbar from '@/components/Navbar';
 import connectDB from '@/lib/db';
 import Siswa from '@/models/Siswa';
 import Jurnal from '@/models/Jurnal';
+import TanyaJawab from '@/models/TanyaJawab';
 import TeacherDashboardClient from '@/components/TeacherDashboardClient';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FileText } from 'lucide-react';
+import { FileText, MessageCircle, AlertTriangle } from 'lucide-react';
+
+export const dynamic = 'force-dynamic';
 
 async function getStudentsWithProgress() {
     await connectDB();
@@ -41,7 +44,14 @@ export default async function TeacherDashboard() {
         redirect('/dashboard');
     }
 
-    const students = await getStudentsWithProgress();
+    const allStudents = await getStudentsWithProgress();
+
+    // Filter data sampah (kelas 'nama', 'nis', dll) yang mungkin lolos dari DB
+    const students = allStudents.filter(s => {
+        const k = s.kelas ? s.kelas.toLowerCase().trim() : '';
+        // Pastikan kelas valid (bukan header CSV dan panjang > 1)
+        return k && k.length > 1 && !['nama', 'nis', 'kelas', 'password', 'no'].includes(k);
+    });
 
     const groupedStudents = students.reduce((acc: any, student) => {
         const k = student.kelas || 'Tanpa Kelas';
@@ -49,6 +59,11 @@ export default async function TeacherDashboard() {
         acc[k].push(student);
         return acc;
     }, {});
+
+    const pendingQuestionsCount = await TanyaJawab.countDocuments({
+        id_guru: (session as any).username,
+        status: 'menunggu'
+    });
 
     return (
         <div className="min-h-screen bg-[#fdfbf7] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] pb-20 font-serif">
@@ -70,14 +85,35 @@ export default async function TeacherDashboard() {
                     </div>
                 </div>
 
-                <div className="flex justify-center mb-10">
+                <div className="flex flex-col sm:flex-row justify-center gap-4 mb-10 w-full max-w-2xl px-4">
                     <Link
                         href="/teacher/logs"
-                        className="flex items-center gap-2 px-8 py-3 bg-[#5d4037] text-[#fdfbf7] rounded-full font-serif font-bold shadow-lg hover:bg-[#3e2723] hover:shadow-xl transition-all hover:-translate-y-1 active:scale-95 border-2 border-[#8d6e63] group relative overflow-hidden"
+                        className="flex-1 flex justify-center items-center gap-2 px-6 py-3 bg-[#5d4037] text-[#fdfbf7] rounded-full font-serif font-bold shadow-lg hover:bg-[#3e2723] hover:shadow-xl transition-all hover:-translate-y-1 active:scale-95 border-2 border-[#8d6e63] group relative overflow-hidden"
                     >
                         <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                         <FileText className="w-5 h-5 relative z-10" />
-                        <span className="relative z-10">Pantau Log Aktifitas Siswa Terbaru</span>
+                        <span className="relative z-10 text-sm whitespace-nowrap">Log Aktifitas Siswa</span>
+                    </Link>
+
+                    <Link
+                        href="/teacher/qna"
+                        className={`flex-1 flex justify-center items-center gap-2 px-6 py-3 rounded-full font-serif font-bold shadow-lg transition-all hover:-translate-y-1 active:scale-95 border-2 group relative overflow-hidden ${pendingQuestionsCount > 0
+                            ? 'bg-yellow-400 text-[#3e2723] border-yellow-600 hover:bg-yellow-300 animate-pulse-subtle'
+                            : 'bg-[#fdfbf7] text-[#5d4037] border-[#5d4037] hover:bg-[#efebe9]'
+                            }`}
+                    >
+                        <div className={`absolute inset-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ${pendingQuestionsCount > 0 ? 'bg-white/20' : 'bg-[#5d4037]/10'}`}></div>
+
+                        <div className="relative z-10 flex items-center gap-2">
+                            <MessageCircle className="w-5 h-5" />
+                            <span className="text-sm whitespace-nowrap">Tanya Jawab Santri</span>
+
+                            {pendingQuestionsCount > 0 && (
+                                <span className="ml-1 bg-red-600 text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-white animate-bounce">
+                                    {pendingQuestionsCount}
+                                </span>
+                            )}
+                        </div>
                     </Link>
                 </div>
 

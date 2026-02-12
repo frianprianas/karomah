@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import connectDB from '@/lib/db';
 import Jurnal from '@/models/Jurnal';
+import TanyaJawab from '@/models/TanyaJawab';
 import Siswa from '@/models/Siswa';
 
 export const dynamic = 'force-dynamic';
@@ -37,16 +38,39 @@ export async function GET(req: NextRequest) {
             searchFilter = { nis: { $in: nises } };
         }
 
-        // Query Jurnal dengan filter (jika ada) dan pagination
-        // Sort by updatedAt desc (paling baru diisi)
-        const totalLogs = await Jurnal.countDocuments(searchFilter);
-        const logs = await Jurnal.find(searchFilter)
-            .sort({ updatedAt: -1, createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .lean();
+        // Hitung Total Dokumen (Agak berat kalau union count, jadi kita estimasi atau count terpisah lalu jumlahkan)
+        // Untuk akurasi, kita count terpisah
+        const countJurnal = await Jurnal.countDocuments(searchFilter);
 
-        // Manual Lookup data Siswa untuk setiap log (lebih efisien daripada aggregate lookup besar jika data jutaan, tapi untuk skala sekolah aggregate juga oke. Kita pakai manual lookup batch agar simpel)
+        const qnaFilter = search ? { nis_siswa: { $in: (searchFilter.nis ? searchFilter.nis['$in'] : []) } } : {};
+        // Perbaiki filter QnA jika search kosong (tampilkan semua)
+        const finalQnaFilter = search ? qnaFilter : {};
+
+        const countQnA = await TanyaJawab.countDocuments(finalQnaFilter);
+        const totalLogs = countJurnal + countQnA;
+
+        // Aggregation Pipeline untuk Join Limit Offset
+        // Jurnal Collection sebagai base
+        const logs = await Jurnal.aggregate([
+            { $match: searchFilter },
+            { $addFields: { type: 'jurnal', activity: '$tgl_jurnal', date: { $ifNull: ['$updatedAt', '$createdAt'] } } },
+            { $project: { nis: 1, type: 1, activity: 1, date: 1 } },
+            {
+                $unionWith: {
+                    coll: 'tanyajawabs',
+                    pipeline: [
+                        { $match: finalQnaFilter },
+                        { $addFields: { type: 'qna', activity: '$pertanyaan', date: '$createdAt', nis: '$nis_siswa' } },
+                        { $project: { nis: 1, type: 1, activity: 1, date: 1 } }
+                    ]
+                }
+            },
+            { $sort: { date: -1 } },
+            { $skip: skip },
+            { $limit: limit }
+        ]);
+
+        // Manual Lookup data Siswa untuk setiap log
         const uniqueNises = Array.from(new Set(logs.map((l: any) => l.nis)));
         const students = await Siswa.find({ nis: { $in: uniqueNises } }).lean();
 
@@ -64,8 +88,9 @@ export async function GET(req: NextRequest) {
                 nis: log.nis,
                 nama: student ? student.nama : 'Siswa Tidak Dikenal',
                 kelas: student ? student.kelas : '-',
-                hari_ke: log.tgl_jurnal,
-                tanggal_isi: log.updatedAt || log.createdAt
+                hari_ke: log.activity, // Untuk Jurnal = Angka/String Hari, Untuk QnA = Text Pertanyaan
+                type: log.type, // 'jurnal' atau 'qna'
+                tanggal_isi: log.date
             };
         });
 

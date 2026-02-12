@@ -1,8 +1,9 @@
+
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, Search, Calendar, ChevronRight } from 'lucide-react';
+import { ChevronLeft, Search, Calendar, ChevronRight, MessageCircle } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 interface LogEntry {
@@ -10,8 +11,9 @@ interface LogEntry {
     nis: string;
     nama: string;
     kelas: string;
-    hari_ke: number;
+    hari_ke: string | number; // Bisa angka (jurnal) atau text pertanyaan
     tanggal_isi: string;
+    type?: 'jurnal' | 'qna';
 }
 
 function TeacherLogsContent() {
@@ -116,27 +118,49 @@ function TeacherLogsContent() {
                         </div>
                     ) : (
                         logs.map((log) => (
-                            <div key={log._id} className="bg-white p-4 rounded-sm border-l-4 border-l-[#8d6e63] border-y border-r border-gray-200 shadow-sm hover:shadow-md transition-shadow relative group">
+                            <div key={log._id} className={`bg-white p-4 rounded-sm border-l-4 border-y border-r border-gray-200 shadow-sm hover:shadow-md transition-shadow relative group ${log.type === 'qna' ? 'border-l-blue-600' : 'border-l-[#8d6e63]'}`}>
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                    <div>
-                                        <p className="text-[#3e2723] text-sm md:text-base leading-relaxed font-serif">
-                                            Pada tanggal <span className="font-bold">{new Date(log.tanggal_isi).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>,
-                                            siswa dengan nama <span className="font-bold text-[#5d4037] underline">{log.nama}</span>
-                                            (Kelas <span className="font-bold">{log.kelas}</span>)
-                                            telah mengisi jurnal di hari ke-<span className="font-bold bg-[#efebe9] px-2 py-0.5 rounded-full border border-[#d7ccc8]">{log.hari_ke}</span>.
-                                        </p>
+                                    <div className="flex-1">
+                                        {log.type === 'qna' ? (
+                                            <div className="text-[#3e2723] text-sm md:text-base leading-relaxed font-serif">
+                                                Pada tanggal <span className="font-bold">{new Date(log.tanggal_isi).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>,
+                                                siswa dengan nama <span className="font-bold text-[#5d4037] underline">{log.nama}</span>
+                                                (Kelas <span className="font-bold">{log.kelas}</span>)
+                                                telah <span className="font-bold text-blue-700">mengajukan pertanyaan</span>:
+                                                <div className="mt-2 text-sm italic bg-blue-50 p-2 border-l-2 border-blue-400 text-blue-900 rounded-r line-clamp-2">
+                                                    "{log.hari_ke}"
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <p className="text-[#3e2723] text-sm md:text-base leading-relaxed font-serif">
+                                                Pada tanggal <span className="font-bold">{new Date(log.tanggal_isi).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>,
+                                                siswa dengan nama <span className="font-bold text-[#5d4037] underline">{log.nama}</span>
+                                                (Kelas <span className="font-bold">{log.kelas}</span>)
+                                                telah mengisi jurnal di hari ke-<span className="font-bold bg-[#efebe9] px-2 py-0.5 rounded-full border border-[#d7ccc8]">{log.hari_ke}</span>.
+                                            </p>
+                                        )}
+
                                         <p className="text-[10px] text-gray-500 mt-2 flex items-center gap-1">
-                                            <Calendar className="w-3 h-3" />
+                                            {log.type === 'qna' ? <MessageCircle className="w-3 h-3 text-blue-500" /> : <Calendar className="w-3 h-3" />}
                                             {new Date(log.tanggal_isi).toLocaleDateString('id-ID', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} WIB
                                         </p>
                                     </div>
 
-                                    <Link
-                                        href={`/teacher/student/${log.nis}`}
-                                        className="sm:w-auto w-full text-center px-4 py-2 bg-[#fdfbf7] border border-[#d7ccc8] text-[#8d6e63] text-xs font-bold uppercase tracking-wider hover:bg-[#8d6e63] hover:text-white transition-colors rounded-sm shadow-sm"
-                                    >
-                                        Lihat Detail
-                                    </Link>
+                                    {log.type === 'qna' ? (
+                                        <Link
+                                            href="/teacher/qna"
+                                            className="sm:w-auto w-full text-center px-4 py-2 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold uppercase tracking-wider hover:bg-blue-600 hover:text-white transition-colors rounded-sm shadow-sm whitespace-nowrap"
+                                        >
+                                            Jawab
+                                        </Link>
+                                    ) : (
+                                        <Link
+                                            href={`/teacher/student/${log.nis}`}
+                                            className="sm:w-auto w-full text-center px-4 py-2 bg-[#fdfbf7] border border-[#d7ccc8] text-[#8d6e63] text-xs font-bold uppercase tracking-wider hover:bg-[#8d6e63] hover:text-white transition-colors rounded-sm shadow-sm whitespace-nowrap"
+                                        >
+                                            Lihat Detail
+                                        </Link>
+                                    )}
                                 </div>
                             </div>
                         ))

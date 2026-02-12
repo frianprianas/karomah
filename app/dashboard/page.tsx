@@ -8,6 +8,9 @@ import { CheckCircle } from 'lucide-react';
 import connectDB from '@/lib/db';
 import Jurnal from '@/models/Jurnal';
 import WelcomeModal from '@/components/WelcomeModal';
+import QnAFloatingButton from '@/components/QnAFloatingButton';
+
+export const dynamic = 'force-dynamic';
 
 async function getJournalStatus(nis: string) {
     await connectDB();
@@ -97,16 +100,13 @@ export default async function Dashboard() {
                     {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => {
                         const status = journalStatus.get(day);
                         let borderClass = "border-[#d7ccc8] bg-[#efebe9] text-[#8d6e63] hover:border-[#8d6e63] hover:bg-[#d7ccc8]";
-                        let icon = null;
 
                         if (status === 'full') {
                             borderClass = "border-[#2e7d32] bg-[#e8f5e9] text-[#1b5e20] shadow-md";
-                            icon = <CheckCircle className="w-4 h-4 ml-1" />;
                         } else if (status === 'partial') {
                             borderClass = "border-[#fbc02d] bg-[#fffde7] text-[#f57f17]";
                         }
 
-                        // Roman numerals or stylized numbers could be nice, but simple numbers are clearer.
                         return (
                             <Link
                                 key={day}
@@ -133,7 +133,10 @@ export default async function Dashboard() {
                         )
                     })}
                 </div>
-            </main >
-        </div >
+            </main>
+
+            {/* Floating Action Button untuk Tanya Jawab */}
+            <QnAFloatingButton />
+        </div>
     );
 }

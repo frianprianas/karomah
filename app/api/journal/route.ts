@@ -28,6 +28,12 @@ export async function POST(req: Request) {
             tanda_tangan
         } = await req.json();
 
+        // Validasi Hari Jurnal
+        const hariKe = parseInt(tgl_jurnal);
+        if (isNaN(hariKe) || hariKe < 1 || hariKe > 30) {
+            return NextResponse.json({ error: 'Hari jurnal tidak valid (1-30)' }, { status: 400 });
+        }
+
         // Upsert journal entry using $set to only update specific fields
         const journal = await Jurnal.findOneAndUpdate(
             { nis: (session as any).username, tgl_jurnal } as any,

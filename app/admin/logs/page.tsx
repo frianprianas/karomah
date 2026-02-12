@@ -1,8 +1,9 @@
+
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, Search, Calendar, ChevronRight } from 'lucide-react';
+import { ChevronLeft, Search, Calendar, ChevronRight, MessageCircle } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 interface LogEntry {
@@ -10,8 +11,9 @@ interface LogEntry {
     nis: string;
     nama: string;
     kelas: string;
-    hari_ke: number;
+    hari_ke: string | number;
     tanggal_isi: string;
+    type?: 'jurnal' | 'qna';
 }
 
 function AdminLogsContent() {
@@ -50,20 +52,17 @@ function AdminLogsContent() {
 
     // Effect saat search/page berubah
     useEffect(() => {
-        // Debounce search sedikit agar tidak spam API
         const timer = setTimeout(() => {
             fetchLogs(page, search);
         }, 500);
-
         return () => clearTimeout(timer);
     }, [page, search]);
 
-    // Update URL tanpa refresh halaman saat filter berubah
+    // Update URL
     useEffect(() => {
         const params = new URLSearchParams();
         if (page > 1) params.set('page', page.toString());
         if (search) params.set('search', search);
-
         router.replace(`/admin/logs?${params.toString()}`);
     }, [page, search, router]);
 
@@ -76,7 +75,7 @@ function AdminLogsContent() {
                         <Link href="/admin" className="p-2 hover:bg-[#4e342e] rounded-full transition-colors">
                             <ChevronLeft className="w-6 h-6" />
                         </Link>
-                        <h1 className="text-xl font-bold">Log Aktifitas Siswa (Admin View)</h1>
+                        <h1 className="text-xl font-bold">Log Aktifitas Siswa (Admin)</h1>
                     </div>
                 </div>
             </header>
@@ -93,7 +92,7 @@ function AdminLogsContent() {
                             value={search}
                             onChange={(e) => {
                                 setSearch(e.target.value);
-                                setPage(1); // Reset ke hal 1 jika search berubah
+                                setPage(1);
                             }}
                             className="w-full pl-9 p-2 border border-[#d7ccc8] rounded-sm focus:ring-[#8d6e63] focus:border-[#5d4037] text-sm outline-none"
                         />
@@ -106,7 +105,6 @@ function AdminLogsContent() {
                 {/* Log List */}
                 <div className="space-y-4">
                     {loading ? (
-                        // Skeleton Loading
                         Array.from({ length: 5 }).map((_, i) => (
                             <div key={i} className="animate-pulse bg-white p-4 h-24 rounded border border-[#d7ccc8]"></div>
                         ))
@@ -116,27 +114,43 @@ function AdminLogsContent() {
                         </div>
                     ) : (
                         logs.map((log) => (
-                            <div key={log._id} className="bg-white p-4 rounded-sm border-l-4 border-l-[#8d6e63] border-y border-r border-gray-200 shadow-sm hover:shadow-md transition-shadow relative group">
+                            <div key={log._id} className={`bg-white p-4 rounded-sm border-l-4 border-y border-r border-gray-200 shadow-sm hover:shadow-md transition-shadow relative group ${log.type === 'qna' ? 'border-l-blue-600' : 'border-l-[#8d6e63]'}`}>
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                    <div>
-                                        <p className="text-[#3e2723] text-sm md:text-base leading-relaxed font-serif">
-                                            Pada tanggal <span className="font-bold">{new Date(log.tanggal_isi).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>,
-                                            siswa dengan nama <span className="font-bold text-[#5d4037] underline">{log.nama}</span>
-                                            (Kelas <span className="font-bold">{log.kelas}</span>)
-                                            telah mengisi jurnal di hari ke-<span className="font-bold bg-[#efebe9] px-2 py-0.5 rounded-full border border-[#d7ccc8]">{log.hari_ke}</span>.
-                                        </p>
+                                    <div className="flex-1">
+                                        {log.type === 'qna' ? (
+                                            <div className="text-[#3e2723] text-sm md:text-base leading-relaxed font-serif">
+                                                Pada tanggal <span className="font-bold">{new Date(log.tanggal_isi).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>,
+                                                siswa dengan nama <span className="font-bold text-[#5d4037] underline">{log.nama}</span>
+                                                (Kelas <span className="font-bold">{log.kelas}</span>)
+                                                telah <span className="font-bold text-blue-700">mengajukan pertanyaan</span>:
+                                                <div className="mt-2 text-sm italic bg-blue-50 p-2 border-l-2 border-blue-400 text-blue-900 rounded-r line-clamp-2">
+                                                    "{log.hari_ke}"
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <p className="text-[#3e2723] text-sm md:text-base leading-relaxed font-serif">
+                                                Pada tanggal <span className="font-bold">{new Date(log.tanggal_isi).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>,
+                                                siswa dengan nama <span className="font-bold text-[#5d4037] underline">{log.nama}</span>
+                                                (Kelas <span className="font-bold">{log.kelas}</span>)
+                                                telah mengisi jurnal di hari ke-<span className="font-bold bg-[#efebe9] px-2 py-0.5 rounded-full border border-[#d7ccc8]">{log.hari_ke}</span>.
+                                            </p>
+                                        )}
+
                                         <p className="text-[10px] text-gray-500 mt-2 flex items-center gap-1">
-                                            <Calendar className="w-3 h-3" />
+                                            {log.type === 'qna' ? <MessageCircle className="w-3 h-3 text-blue-500" /> : <Calendar className="w-3 h-3" />}
                                             {new Date(log.tanggal_isi).toLocaleDateString('id-ID', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} WIB
                                         </p>
                                     </div>
 
-                                    <Link
-                                        href={`/teacher/student/${log.nis}`}
-                                        className="sm:w-auto w-full text-center px-4 py-2 bg-[#fdfbf7] border border-[#d7ccc8] text-[#8d6e63] text-xs font-bold uppercase tracking-wider hover:bg-[#8d6e63] hover:text-white transition-colors rounded-sm shadow-sm"
-                                    >
-                                        Lihat Detail
-                                    </Link>
+                                    {log.type === 'jurnal' && (
+                                        <Link
+                                            href={`/teacher/student/${log.nis}`} // Menggunakan link guru sementara, karena admin bisa akses detail jurnal di sini (jika diizinkan)
+                                            className="sm:w-auto w-full text-center px-4 py-2 bg-[#fdfbf7] border border-[#d7ccc8] text-[#8d6e63] text-xs font-bold uppercase tracking-wider hover:bg-[#8d6e63] hover:text-white transition-colors rounded-sm shadow-sm whitespace-nowrap"
+                                        >
+                                            Lihat Jurnal
+                                        </Link>
+                                    )}
+                                    {/* QnA tidak ada tombol aksi di view Admin karena Admin tidak answering */}
                                 </div>
                             </div>
                         ))
