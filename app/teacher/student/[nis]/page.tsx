@@ -7,7 +7,7 @@ import Jurnal from '@/models/Jurnal';
 import Siswa from '@/models/Siswa';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronLeft, Check, X, Clock, Moon, Sun, BookOpen, Activity, Heart, Users } from 'lucide-react';
+import { ChevronLeft, Check, X, Clock, Moon, Sun, BookOpen, Activity, Heart, Users, MapPin, Globe, ExternalLink } from 'lucide-react';
 import TeacherNoteInput from '@/components/TeacherNoteInput';
 
 export const dynamic = 'force-dynamic';
@@ -200,7 +200,7 @@ export default async function StudentJournalPage({ params }: { params: Promise<{
                                                 </div>
                                             </div>
 
-                                            {/* KOLOM KANAN: AKTIFITAS & LHSAN */}
+                                            {/* KOLOM KANAN: AKTIFITAS & IHSAN */}
                                             <div className="space-y-6">
 
                                                 {/* Aktifitas Harian (Olahraga, Bantu Ortu, Sosial) */}
@@ -259,14 +259,58 @@ export default async function StudentJournalPage({ params }: { params: Promise<{
                                                     </div>
                                                 </div>
 
-                                                {/* Catatan Ihsan */}
+                                                {/* Catatan Ihsan (Update Tipe, Link, Lokasi) */}
                                                 <div>
                                                     <h4 className="text-sm font-bold text-[#5d4037] border-b border-[#d7ccc8] pb-2 mb-3 flex items-center gap-2">
                                                         <Users className="w-4 h-4" /> Catatan Ihsan
                                                     </h4>
-                                                    {(journal.catatan_ihsan?.isi || journal.catatan_ihsan?.foto) ? (
+                                                    {(journal.catatan_ihsan?.isi || journal.catatan_ihsan?.foto || journal.catatan_ihsan?.link || journal.catatan_ihsan?.lokasi) ? (
                                                         <div className="bg-[#fdfbf7] p-4 rounded border border-[#d7ccc8] relative">
                                                             <div className="absolute top-0 left-0 w-1 h-full bg-[#8d6e63]"></div>
+
+                                                            {/* Tipe Badge & Links */}
+                                                            <div className='flex flex-wrap gap-2 mb-3'>
+                                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase inline-flex items-center gap-1 border ${(journal.catatan_ihsan.tipe === 'Daring')
+                                                                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                                                    : 'bg-green-50 text-green-700 border-green-200'
+                                                                    }`}>
+                                                                    {journal.catatan_ihsan.tipe === 'Daring' ? <Globe className="w-3 h-3" /> : <MapPin className="w-3 h-3" />}
+                                                                    {journal.catatan_ihsan.tipe || 'Langsung'}
+                                                                </span>
+
+                                                                {journal.catatan_ihsan.tipe === 'Daring' && journal.catatan_ihsan.link && (
+                                                                    <a
+                                                                        href={journal.catatan_ihsan.link}
+                                                                        target="_blank"
+                                                                        rel="noreferrer"
+                                                                        className="flex items-center gap-1 text-[10px] text-blue-600 underline hover:text-blue-800"
+                                                                    >
+                                                                        <ExternalLink className="w-3 h-3" /> Buka Link Sumber
+                                                                    </a>
+                                                                )}
+
+                                                                {journal.catatan_ihsan.tipe === 'Langsung' && journal.catatan_ihsan.lokasi && (
+                                                                    <a
+                                                                        href={`https://www.google.com/maps/search/?api=1&query=${journal.catatan_ihsan.lokasi}`}
+                                                                        target="_blank"
+                                                                        rel="noreferrer"
+                                                                        className="flex items-center gap-1 text-[10px] text-green-600 underline hover:text-green-800"
+                                                                    >
+                                                                        <MapPin className="w-3 h-3" /> Cek Lokasi Maps
+                                                                    </a>
+                                                                )}
+                                                                {journal.catatan_ihsan.tipe === 'Langsung' && !journal.catatan_ihsan.lokasi && (
+                                                                    <span className="text-[10px] text-red-400 italic flex items-center gap-1"><MapPin className="w-3 h-3" /> Tidak ada lokasi GPS</span>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Nama Tempat Display */}
+                                                            {journal.catatan_ihsan.tipe === 'Langsung' && journal.catatan_ihsan.nama_tempat && (
+                                                                <div className="flex items-center gap-2 text-xs text-[#5d4037] font-bold bg-[#efebe9] px-2 py-1 rounded inline-block mb-3 border border-[#d7ccc8]">
+                                                                    <MapPin className="w-3 h-3 text-[#8d6e63]" />
+                                                                    <span>{journal.catatan_ihsan.nama_tempat}</span>
+                                                                </div>
+                                                            )}
 
                                                             {journal.catatan_ihsan?.isi && (
                                                                 <p className="italic text-[#3e2723] text-sm leading-relaxed mb-3">
@@ -284,7 +328,7 @@ export default async function StudentJournalPage({ params }: { params: Promise<{
                                                                 </div>
                                                             )}
 
-                                                            <div className="text-right">
+                                                            <div className="text-right border-t border-[#d7ccc8]/50 pt-2">
                                                                 <span className="text-[10px] text-[#8d6e63] font-bold uppercase">Sumber: </span>
                                                                 <span className="text-xs font-bold text-[#5d4037]">{journal.catatan_ihsan?.sumber || '-'}</span>
                                                             </div>
@@ -334,4 +378,3 @@ export default async function StudentJournalPage({ params }: { params: Promise<{
         </div>
     );
 }
-

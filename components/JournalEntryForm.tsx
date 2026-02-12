@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Save, AlertCircle, PenTool, Eraser, Check, X, Camera, Image as ImageIcon, Trash2, SwitchCamera } from 'lucide-react';
+import { Save, AlertCircle, PenTool, Eraser, Check, X, Camera, Image as ImageIcon, Trash2, SwitchCamera, MapPin, Youtube, Globe, Map, Users } from 'lucide-react';
 import { SURAH_LIST } from '@/lib/quran';
 import { RAMADAN_HADITHS } from '@/lib/hadits';
 import SignatureCanvas from 'react-signature-canvas';
@@ -123,6 +123,10 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
     const videoRef = useRef<HTMLVideoElement>(null);
     const [stream, setStream] = useState<MediaStream | null>(null);
 
+    // Location State
+    const [locError, setLocError] = useState('');
+    const [locLoading, setLocLoading] = useState(false);
+
     const [isMounted, setIsMounted] = useState(false);
 
     // Hadith for today
@@ -151,7 +155,7 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
         olah_raga: { ya_tidak: false, kegiatan: '' },
         bantu_ortu: { ya_tidak: false, kegiatan: '' },
         aktifitas_sosial: { ya_tidak: false, kegiatan: '', foto: '' },
-        catatan_ihsan: { sumber: '', isi: '', foto: '' },
+        catatan_ihsan: { tipe: 'Langsung', sumber: '', link: '', lokasi: '', nama_tempat: '', isi: '', foto: '' },
         jam_tidur: '',
         tanda_tangan: ''
     };
@@ -251,6 +255,39 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                 stopCamera();
             }
         }
+    };
+
+    // Location Logic
+    const getLocation = () => {
+        setLocLoading(true);
+        setLocError('');
+        if (!navigator.geolocation) {
+            setLocError("Geolocation tidak didukung oleh browser ini.");
+            setLocLoading(false);
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                // Generate Google Maps Link or just store coords
+                const locationString = `${latitude},${longitude}`;
+                handleChange('catatan_ihsan', 'lokasi', locationString);
+                setLocLoading(false);
+            },
+            (error) => {
+                let errorMsg = "Gagal mengambil lokasi.";
+                switch (error.code) {
+                    case error.PERMISSION_DENIED: errorMsg = "Izin lokasi ditolak. Mohon izinkan akses lokasi di browser."; break;
+                    case error.POSITION_UNAVAILABLE: errorMsg = "Informasi lokasi tidak tersedia."; break;
+                    case error.TIMEOUT: errorMsg = "Waktu habis saat mengambil lokasi."; break;
+                    default: errorMsg = error.message;
+                }
+                setLocError(errorMsg);
+                setLocLoading(false);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
     };
 
     // Signature Logic
@@ -549,28 +586,124 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                     </section>
                 ))}
 
-                {/* Catatan IHSAN (updated label) */}
-                <section className="space-y-4">
-                    <h3 className="text-xl font-serif font-bold text-[#3e2723] border-b border-[#8d6e63]/30 pb-2">IHSAN</h3>
-                    <div className="space-y-3">
+                {/* Catatan IHSAN (MAJOR UPDATE) */}
+                <section className="space-y-4 bg-white/50 p-4 rounded-lg border border-[#d7ccc8] relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#8d6e63] to-[#5d4037]"></div>
+                    <h3 className="text-xl font-serif font-bold text-[#3e2723] pb-2 flex items-center gap-2">
+                        <Users className="w-5 h-5 text-[#5d4037]" /> Catatan IHSAN
+                    </h3>
+
+                    <div className="space-y-4">
+                        {/* Selector Tipe: Daring vs Langsung */}
+                        <div className="flex gap-4">
+                            <label className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-md border cursor-pointer transition-all ${formData.catatan_ihsan.tipe === 'Langsung' ? 'bg-[#5d4037] text-white border-[#5d4037]' : 'bg-[#fff] text-[#5d4037] border-[#d7ccc8] hover:bg-[#efebe9]'}`}>
+                                <input
+                                    type="radio"
+                                    name="ihsan_tipe"
+                                    value="Langsung"
+                                    checked={formData.catatan_ihsan.tipe === 'Langsung'}
+                                    onChange={() => handleChange('catatan_ihsan', 'tipe', 'Langsung')}
+                                    className="hidden"
+                                />
+                                <MapPin className="w-4 h-4" />
+                                <span className="font-bold text-sm">Langsung / Masjid</span>
+                            </label>
+
+                            <label className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-md border cursor-pointer transition-all ${formData.catatan_ihsan.tipe === 'Daring' ? 'bg-[#5d4037] text-white border-[#5d4037]' : 'bg-[#fff] text-[#5d4037] border-[#d7ccc8] hover:bg-[#efebe9]'}`}>
+                                <input
+                                    type="radio"
+                                    name="ihsan_tipe"
+                                    value="Daring"
+                                    checked={formData.catatan_ihsan.tipe === 'Daring'}
+                                    onChange={() => handleChange('catatan_ihsan', 'tipe', 'Daring')}
+                                    className="hidden"
+                                />
+                                <Youtube className="w-4 h-4" />
+                                <span className="font-bold text-sm">Online / Daring</span>
+                            </label>
+                        </div>
+
+                        {/* Field Sesuai Tipe */}
+                        {formData.catatan_ihsan.tipe === 'Daring' ? (
+                            <div className="animate-in fade-in slide-in-from-top-2 duration-300 space-y-3">
+                                <label className="block text-sm font-serif font-medium text-[#5d4037]">Link Video Ceramah / Sumber Internet</label>
+                                <div className="relative">
+                                    <Globe className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                                    <input
+                                        type="url"
+                                        value={formData.catatan_ihsan.link || ''}
+                                        onChange={(e) => handleChange('catatan_ihsan', 'link', e.target.value)}
+                                        className="w-full pl-9 p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:ring-[#8d6e63] focus:border-[#5d4037] font-serif outline-none text-[#3e2723]"
+                                        placeholder="https://youtube.com/..."
+                                    />
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="animate-in fade-in slide-in-from-top-2 duration-300 space-y-3">
+                                <label className="block text-sm font-serif font-medium text-[#5d4037]">Lokasi Saat Ini (Masjid)</label>
+                                {formData.catatan_ihsan.lokasi ? (
+                                    <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-md text-green-800 text-sm">
+                                        <div className="flex items-center gap-2">
+                                            <Check className="w-4 h-4" />
+                                            <span>Lokasi Tercatat: {formData.catatan_ihsan.lokasi}</span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleChange('catatan_ihsan', 'lokasi', '')}
+                                            className="text-xs text-red-600 hover:underline flex items-center gap-1"
+                                        >
+                                            <Trash2 className="w-3 h-3" /> Ulangi
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={getLocation}
+                                        disabled={locLoading}
+                                        className="w-full flex items-center justify-center gap-2 p-3 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold border border-blue-200 rounded-md transition-all disabled:opacity-50"
+                                    >
+                                        {locLoading ? (
+                                            "Mengambil lokasi..."
+                                        ) : (
+                                            <>
+                                                <Map className="w-4 h-4" /> Ambil Lokasi GPS
+                                            </>
+                                        )}
+                                    </button>
+                                )}
+                                {locError && <p className="text-xs text-red-500 italic mt-1">{locError}</p>}
+
+                                <div className="mt-3 animate-in fade-in slide-in-from-top-1 duration-300">
+                                    <label className="block text-sm font-serif font-medium text-[#5d4037] mb-1">Nama Masjid / Musholla / Tempat</label>
+                                    <input
+                                        type="text"
+                                        value={formData.catatan_ihsan.nama_tempat || ''}
+                                        onChange={(e) => handleChange('catatan_ihsan', 'nama_tempat', e.target.value)}
+                                        className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:ring-[#8d6e63] focus:border-[#5d4037] font-serif outline-none text-[#3e2723]"
+                                        placeholder="Contoh: Masjid Jami Al-Hidayah"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
                         <div>
-                            <label className="block text-sm font-serif font-medium text-[#5d4037] mb-1">Sumber / Penceramah</label>
+                            <label className="block text-sm font-serif font-medium text-[#5d4037] mb-1">Nama Penceramah / Narasumber</label>
                             <input
                                 type="text"
                                 value={formData.catatan_ihsan.sumber}
                                 onChange={(e) => handleChange('catatan_ihsan', 'sumber', e.target.value)}
                                 className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:ring-[#8d6e63] focus:border-[#5d4037] font-serif outline-none text-[#3e2723]"
-                                placeholder="Contoh: Kultum Masjid / Youtube"
+                                placeholder="Contoh: Ust. Abdul Somad"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-serif font-medium text-[#5d4037] mb-1">Isi Catatan</label>
+                            <label className="block text-sm font-serif font-medium text-[#5d4037] mb-1">Ringkasan Materi</label>
                             <textarea
                                 value={formData.catatan_ihsan.isi}
                                 onChange={(e) => handleChange('catatan_ihsan', 'isi', e.target.value)}
                                 className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:ring-[#8d6e63] focus:border-[#5d4037] font-serif outline-none text-[#3e2723]"
                                 rows={3}
-                                placeholder="Ringkasan materi..."
+                                placeholder="Tuliskan intisari ceramah..."
                             />
                         </div>
 

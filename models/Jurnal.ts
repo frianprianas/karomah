@@ -40,7 +40,11 @@ export interface IJurnal extends Document {
         foto?: string;
     };
     catatan_ihsan: {
+        tipe: 'Daring' | 'Langsung';
         sumber: string;
+        link?: string;
+        lokasi?: string;
+        nama_tempat?: string;
         isi: string;
         foto?: string;
     };
@@ -92,7 +96,11 @@ const JurnalSchema: Schema = new Schema({
         foto: { type: String, default: '' }
     },
     catatan_ihsan: {
+        tipe: { type: String, enum: ['Daring', 'Langsung'], default: 'Langsung' },
         sumber: { type: String, default: '' },
+        link: { type: String, default: '' },
+        lokasi: { type: String, default: '' },
+        nama_tempat: { type: String, default: '' },
         isi: { type: String, default: '' },
         foto: { type: String, default: '' }
     },
