@@ -37,10 +37,12 @@ export interface IJurnal extends Document {
     aktifitas_sosial: {
         ya_tidak: boolean;
         kegiatan: string;
+        foto?: string;
     };
     catatan_ihsan: {
         sumber: string;
         isi: string;
+        foto?: string;
     };
     jam_tidur: string;
     catatan_guru?: string;
@@ -86,11 +88,13 @@ const JurnalSchema: Schema = new Schema({
     },
     aktifitas_sosial: {
         ya_tidak: { type: Boolean, default: false },
-        kegiatan: { type: String, default: '' }
+        kegiatan: { type: String, default: '' },
+        foto: { type: String, default: '' }
     },
     catatan_ihsan: {
         sumber: { type: String, default: '' },
-        isi: { type: String, default: '' }
+        isi: { type: String, default: '' },
+        foto: { type: String, default: '' }
     },
     jam_tidur: { type: String, default: '' },
     catatan_guru: { type: String, default: '' },

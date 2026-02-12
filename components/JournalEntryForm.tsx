@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Save, AlertCircle, PenTool, Eraser, Check, X } from 'lucide-react';
+import { Save, AlertCircle, PenTool, Eraser, Check, X, Camera, Image as ImageIcon, Trash2, SwitchCamera } from 'lucide-react';
 import { SURAH_LIST } from '@/lib/quran';
 import { RAMADAN_HADITHS } from '@/lib/hadits';
 import SignatureCanvas from 'react-signature-canvas';
@@ -63,6 +63,50 @@ function TimeSelect({ value, onChange, label }: { value: string, onChange: (val:
     );
 }
 
+// Helper function to compress image
+const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target?.result as string;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                // Max dimension 800px to keep size small
+                const MAX_WIDTH = 800;
+                const MAX_HEIGHT = 800;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                ctx?.drawImage(img, 0, 0, width, height);
+
+                // Compress to JPEG 0.6 quality
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                resolve(dataUrl);
+            };
+            img.onerror = (err) => reject(err);
+        };
+        reader.onerror = (err) => reject(err);
+    });
+};
+
 export default function JournalEntryForm({ day, initialData }: JournalEntryFormProps) {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
@@ -72,6 +116,13 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
     const [showSigModal, setShowSigModal] = useState(false);
     const sigCanvas = useRef<SignatureCanvas>(null);
     const [signaturePreview, setSignaturePreview] = useState(initialData?.tanda_tangan || '');
+
+    // Camera State
+    const [showCameraModal, setShowCameraModal] = useState(false);
+    const [cameraSection, setCameraSection] = useState('');
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const [stream, setStream] = useState<MediaStream | null>(null);
+
     const [isMounted, setIsMounted] = useState(false);
 
     // Hadith for today
@@ -79,7 +130,13 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
 
     useEffect(() => {
         setIsMounted(true);
-    }, []);
+        return () => {
+            // Cleanup stream if component unmounts
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        };
+    }, [stream]);
 
     const DEFAULT_DATA = {
         jam_bangun: '',
@@ -93,8 +150,8 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
         tadarus: { surat: '', ayat: '' },
         olah_raga: { ya_tidak: false, kegiatan: '' },
         bantu_ortu: { ya_tidak: false, kegiatan: '' },
-        aktifitas_sosial: { ya_tidak: false, kegiatan: '' },
-        catatan_ihsan: { sumber: '', isi: '' },
+        aktifitas_sosial: { ya_tidak: false, kegiatan: '', foto: '' },
+        catatan_ihsan: { sumber: '', isi: '', foto: '' },
         jam_tidur: '',
         tanda_tangan: ''
     };
@@ -128,6 +185,75 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
         }
     };
 
+    const handleImageUpload = async (section: string, e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            try {
+                // Show loading indicator if needed here
+                const compressedBase64 = await compressImage(file);
+                handleChange(section, 'foto', compressedBase64);
+            } catch (error) {
+                console.error("Error compressing image", error);
+                alert("Gagal memproses gambar. Pastikan format gambar didukung.");
+            }
+        }
+    };
+
+    const removeImage = (section: string) => {
+        handleChange(section, 'foto', '');
+    };
+
+    // Camera Logic
+    const startCamera = async (section: string) => {
+        setCameraSection(section);
+        setShowCameraModal(true);
+        try {
+            const mediaStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' }
+            });
+            setStream(mediaStream);
+            if (videoRef.current) {
+                videoRef.current.srcObject = mediaStream;
+            }
+        } catch (err) {
+            console.error("Camera Error:", err);
+            alert("Gagal mengakses kamera. Pastikan izin kamera diberikan di browser Anda.");
+            setShowCameraModal(false);
+        }
+    };
+
+    const stopCamera = () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            setStream(null);
+        }
+        setShowCameraModal(false);
+    };
+
+    const takePhoto = () => {
+        if (videoRef.current) {
+            const video = videoRef.current;
+            const canvas = document.createElement('canvas');
+            // Set canvas dimentions to match video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Compress result
+                // Resize if too big handled by compressImage logic adapted for canvas?
+                // For simplicity, just high compression
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+                handleChange(cameraSection, 'foto', dataUrl);
+                stopCamera();
+            }
+        }
+    };
+
+    // Signature Logic
     const handleSaveSignature = () => {
         if (sigCanvas.current) {
             if (sigCanvas.current.isEmpty()) {
@@ -336,7 +462,7 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                     </div>
                 </section>
 
-                {/* Activities with Toggles */}
+                {/* Activities with Toggles and Photos (Updated for Aktifitas Sosial) */}
                 {['olah_raga', 'bantu_ortu', 'aktifitas_sosial'].map((activity) => (
                     <section key={activity} className="space-y-4">
                         <h3 className="text-xl font-serif font-bold text-[#3e2723] border-b border-[#8d6e63]/30 pb-2 capitalize">{activity.replace('_', ' ')}</h3>
@@ -352,15 +478,71 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                                 <label htmlFor={`${activity}-check`} className="ml-2 text-sm font-serif font-medium text-[#5d4037]">Dilakukan?</label>
                             </div>
                             {formData[activity].ya_tidak && (
-                                <div>
-                                    <label className="block text-sm font-serif font-medium text-[#5d4037] mb-1">Detail Keterangan</label>
-                                    <textarea
-                                        value={formData[activity].kegiatan}
-                                        onChange={(e) => handleChange(activity, 'kegiatan', e.target.value)}
-                                        className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:ring-[#8d6e63] focus:border-[#5d4037] font-serif outline-none text-[#3e2723]"
-                                        rows={2}
-                                        placeholder={`Ceritakan detail aktifitas ${activity.replace('_', ' ')}...`}
-                                    />
+                                <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div>
+                                        <label className="block text-sm font-serif font-medium text-[#5d4037] mb-1">Detail Keterangan</label>
+                                        <textarea
+                                            value={formData[activity].kegiatan}
+                                            onChange={(e) => handleChange(activity, 'kegiatan', e.target.value)}
+                                            className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:ring-[#8d6e63] focus:border-[#5d4037] font-serif outline-none text-[#3e2723]"
+                                            rows={2}
+                                            placeholder={`Ceritakan detail aktifitas ${activity.replace('_', ' ')}...`}
+                                        />
+                                    </div>
+
+                                    {/* Upload Foto Khusus untuk Aktifitas Sosial */}
+                                    {activity === 'aktifitas_sosial' && (
+                                        <div className="bg-[#fffdf9] p-3 rounded-md border border-dashed border-[#d7ccc8]">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <label className="text-sm font-serif font-medium text-[#5d4037] flex items-center gap-2">
+                                                    <Camera className="w-4 h-4" />
+                                                    Dokumentasi / Foto
+                                                </label>
+                                                {formData[activity].foto && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeImage(activity)}
+                                                        className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"
+                                                    >
+                                                        <Trash2 className="w-3 h-3" /> Hapus
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {formData[activity].foto ? (
+                                                <div className="relative w-full h-40 bg-gray-100 rounded-sm overflow-hidden border border-[#d7ccc8]">
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img src={formData[activity].foto} alt="Dokumentasi" className="w-full h-full object-cover" />
+                                                </div>
+                                            ) : (
+                                                <div className="flex gap-3 mt-2">
+                                                    {/* Tombol Kamera Universal */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => startCamera(activity)}
+                                                        className="relative group flex-1 bg-[#efebe9] hover:bg-[#d7ccc8] transition-colors rounded-lg border border-[#d7ccc8] cursor-pointer shadow-sm active:scale-95 transform flex flex-col items-center justify-center py-4 text-[#5d4037]"
+                                                    >
+                                                        <Camera className="w-6 h-6 mb-1" />
+                                                        <span className="text-[10px] font-bold uppercase tracking-wide">Ambil Foto</span>
+                                                    </button>
+
+                                                    {/* Tombol Galeri */}
+                                                    <div className="relative group flex-1 bg-[#efebe9] hover:bg-[#d7ccc8] transition-colors rounded-lg border border-[#d7ccc8] cursor-pointer shadow-sm active:scale-95 transform">
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            onChange={(e) => handleImageUpload(activity, e)}
+                                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                        />
+                                                        <div className="flex flex-col items-center justify-center py-4 text-[#5d4037]">
+                                                            <ImageIcon className="w-6 h-6 mb-1" />
+                                                            <span className="text-[10px] font-bold uppercase tracking-wide">Galeri</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -390,6 +572,58 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                                 rows={3}
                                 placeholder="Ringkasan materi..."
                             />
+                        </div>
+
+                        {/* Foto Catatan Ihsan */}
+                        <div className="bg-[#fffdf9] p-3 rounded-md border border-dashed border-[#d7ccc8] mt-2">
+                            <div className="flex items-center justify-between mb-2">
+                                <label className="text-sm font-serif font-medium text-[#5d4037] flex items-center gap-2">
+                                    <Camera className="w-4 h-4" />
+                                    Foto Bukti / Catatan
+                                </label>
+                                {formData.catatan_ihsan.foto && (
+                                    <button
+                                        type="button"
+                                        onClick={() => removeImage('catatan_ihsan')}
+                                        className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"
+                                    >
+                                        <Trash2 className="w-3 h-3" /> Hapus
+                                    </button>
+                                )}
+                            </div>
+
+                            {formData.catatan_ihsan.foto ? (
+                                <div className="relative w-full h-40 bg-gray-100 rounded-sm overflow-hidden border border-[#d7ccc8]">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={formData.catatan_ihsan.foto} alt="Dokumentasi Ihsan" className="w-full h-full object-cover" />
+                                </div>
+                            ) : (
+                                <div className="flex gap-3 mt-2">
+                                    {/* Tombol Kamera Universal */}
+                                    <button
+                                        type="button"
+                                        onClick={() => startCamera('catatan_ihsan')}
+                                        className="relative group flex-1 bg-[#efebe9] hover:bg-[#d7ccc8] transition-colors rounded-lg border border-[#d7ccc8] cursor-pointer shadow-sm active:scale-95 transform flex flex-col items-center justify-center py-4 text-[#5d4037]"
+                                    >
+                                        <Camera className="w-6 h-6 mb-1" />
+                                        <span className="text-[10px] font-bold uppercase tracking-wide">Ambil Foto</span>
+                                    </button>
+
+                                    {/* Tombol Galeri */}
+                                    <div className="relative group flex-1 bg-[#efebe9] hover:bg-[#d7ccc8] transition-colors rounded-lg border border-[#d7ccc8] cursor-pointer shadow-sm active:scale-95 transform">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => handleImageUpload('catatan_ihsan', e)}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                        />
+                                        <div className="flex flex-col items-center justify-center py-4 text-[#5d4037]">
+                                            <ImageIcon className="w-6 h-6 mb-1" />
+                                            <span className="text-[10px] font-bold uppercase tracking-wide">Galeri</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Tanda Tangan Button & Preview */}
@@ -478,6 +712,58 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                     )}
                 </div>
             </form>
+
+            {/* CAMERA MODAL */}
+            {showCameraModal && isMounted && createPortal(
+                <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-black w-full max-w-lg h-full sm:h-auto sm:rounded-xl shadow-2xl flex flex-col relative overflow-hidden">
+
+                        {/* Video Viewport */}
+                        <div className="relative flex-1 bg-black flex items-center justify-center">
+                            <video
+                                ref={videoRef}
+                                autoPlay
+                                playsInline
+                                muted
+                                className="w-full h-full object-contain sm:object-cover sm:max-h-[60vh]"
+                            />
+
+                            {/* Guide lines */}
+                            <div className="absolute inset-0 pointer-events-none border-[20px] border-black/30"></div>
+                            <div className="absolute inset-10 border-2 border-white/20 rounded-lg pointer-events-none"></div>
+                        </div>
+
+                        {/* Controls */}
+                        <div className="bg-[#1a1a1a] p-6 flex items-center justify-between gap-4">
+                            <button
+                                type="button"
+                                onClick={stopCamera}
+                                className="p-3 text-white hover:bg-white/10 rounded-full transition-colors"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={takePhoto}
+                                className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center bg-red-500 hover:bg-red-600 transition-colors shadow-lg active:scale-95"
+                            >
+                                <div className="w-4 h-4 bg-white rounded-full"></div>
+                            </button>
+
+                            <button
+                                type="button"
+                                // Logic switch camera bisa ditambahkan disini nanti
+                                onClick={() => { }}
+                                className="p-3 text-white/50 hover:bg-white/10 rounded-full transition-colors opacity-0 cursor-default"
+                            >
+                                <SwitchCamera className="w-6 h-6" />
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
 
             {/* SIGNATURE MODAL - PORTAL TO BODY */}
             {showSigModal && isMounted && createPortal(
