@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Save, AlertCircle, PenTool, Eraser, Check, X } from 'lucide-react';
 import { SURAH_LIST } from '@/lib/quran';
+import { RAMADAN_HADITHS } from '@/lib/hadits';
 import SignatureCanvas from 'react-signature-canvas';
 import { createPortal } from 'react-dom';
 
@@ -70,9 +71,11 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
     // Signature State
     const [showSigModal, setShowSigModal] = useState(false);
     const sigCanvas = useRef<SignatureCanvas>(null);
-    // Untuk menyimpan preview di form (base64 string)
     const [signaturePreview, setSignaturePreview] = useState(initialData?.tanda_tangan || '');
     const [isMounted, setIsMounted] = useState(false);
+
+    // Hadith for today
+    const todayHadith = RAMADAN_HADITHS.find(h => h.day === day);
 
     useEffect(() => {
         setIsMounted(true);
@@ -173,6 +176,35 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                 <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-[#8d6e63] opacity-40"></div>
                 <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-[#8d6e63] opacity-40"></div>
                 <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-[#8d6e63] opacity-40"></div>
+
+                {/* Header Sekolah & Hadits Harian */}
+                <div className="text-center mb-6 relative z-10">
+                    <h2 className="font-serif text-lg md:text-xl font-bold text-[#3e2723] uppercase tracking-widest mb-4 border-b-2 border-[#8d6e63]/20 pb-2 inline-block">
+                        SMK Bakti Nusantara 666
+                    </h2>
+
+                    {todayHadith && (
+                        <div className="bg-[#fffdf9] p-5 rounded-xl border border-[#d7ccc8] shadow-sm relative mt-2 group hover:shadow-md transition-shadow">
+
+                            <div className="space-y-3">
+                                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#fdfbf7] px-3 text-[#8d6e63] text-xs font-serif italic border border-[#d7ccc8] rounded-full">
+                                    Mutiara Ramadan Hari ke-{day}
+                                </span>
+
+                                <p className="font-serif text-xl md:text-2xl text-[#5d4037] leading-loose text-center py-2" dir="rtl" lang="ar">
+                                    {todayHadith.arabic}
+                                </p>
+                                <div className="h-px w-1/2 mx-auto bg-gradient-to-r from-transparent via-[#d7ccc8] to-transparent"></div>
+                                <p className="font-serif text-sm md:text-base text-[#3e2723] italic leading-relaxed">
+                                    "{todayHadith.translation}"
+                                </p>
+                                <p className="font-sans text-[10px] text-[#8d6e63] font-bold uppercase tracking-wider text-right mt-2">
+                                    — {todayHadith.narrator}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                </div>
 
                 {error && (
                     <div className="bg-red-50 text-red-800 p-4 rounded-sm border border-red-200 flex items-center gap-2 font-serif text-sm">
