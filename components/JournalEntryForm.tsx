@@ -3,9 +3,10 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Save, AlertCircle, PenTool, Eraser, Check, X, Camera, Image as ImageIcon, Trash2, SwitchCamera, MapPin, Youtube, Globe, Map, Users } from 'lucide-react';
+import { Save, AlertCircle, PenTool, Eraser, Check, X, Camera, Image as ImageIcon, Trash2, SwitchCamera, MapPin, Youtube, Globe, Map, Users, Clock } from 'lucide-react';
 import { SURAH_LIST } from '@/lib/quran';
 import { RAMADAN_HADITHS } from '@/lib/hadits';
+import { JADWAL_IMSAKIYAH_BANDUNG } from '@/lib/imsakiyah';
 import SignatureCanvas from 'react-signature-canvas';
 import { createPortal } from 'react-dom';
 
@@ -129,8 +130,9 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
 
     const [isMounted, setIsMounted] = useState(false);
 
-    // Hadith for today
+    // Hadith & Schedule for today
     const todayHadith = RAMADAN_HADITHS.find(h => h.day === day);
+    const jadwalHariIni = JADWAL_IMSAKIYAH_BANDUNG[day - 1];
 
     useEffect(() => {
         setIsMounted(true);
@@ -364,6 +366,42 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                                 <p className="font-sans text-[10px] text-[#8d6e63] font-bold uppercase tracking-wider text-right mt-2">
                                     — {todayHadith.narrator}
                                 </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Jadwal Imsakiyah Display */}
+                    {jadwalHariIni && (
+                        <div className="w-full mt-6 bg-[#5d4037] p-4 rounded-xl shadow-md text-[#fdfbf7] relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+                            {/* Decorative Background Icon */}
+                            <div className="absolute -top-4 -right-4 p-4 opacity-5 pointer-events-none transform rotate-12">
+                                <Clock className="w-32 h-32" />
+                            </div>
+
+                            <h4 className="text-center font-serif font-bold text-[#f0e6d2] mb-4 text-xs sm:text-sm uppercase tracking-[0.2em] border-b border-[#f0e6d2]/20 pb-2 flex items-center justify-center gap-2">
+                                <Clock className="w-4 h-4" />
+                                Jadwal Imsakiyah Bandung (Hari ke-{day})
+                            </h4>
+
+                            <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-8 gap-2 sm:gap-3 text-center">
+                                {[
+                                    { label: 'Imsak', time: jadwalHariIni.imsak },
+                                    { label: 'Subuh', time: jadwalHariIni.subuh },
+                                    { label: 'Terbit', time: jadwalHariIni.terbit, extraClass: 'text-yellow-200/50' },
+                                    { label: 'Dhuha', time: jadwalHariIni.dhuha, extraClass: 'text-yellow-200/50' },
+                                    { label: 'Dzuhur', time: jadwalHariIni.dzuhur },
+                                    { label: 'Ashar', time: jadwalHariIni.ashar },
+                                    { label: 'Maghrib', time: jadwalHariIni.maghrib, highlight: true },
+                                    { label: 'Isya', time: jadwalHariIni.isya },
+                                ].map((item) => (
+                                    <div
+                                        key={item.label}
+                                        className={`flex flex-col items-center p-2 rounded transition-colors ${item.highlight ? 'bg-[#8d6e63] shadow-lg scale-105 border border-[#f0e6d2]/30' : 'bg-[#fff]/5 hover:bg-[#fff]/10'}`}
+                                    >
+                                        <span className={`text-[10px] uppercase font-bold tracking-wider mb-1 ${item.extraClass || 'text-[#d7ccc8]'}`}>{item.label}</span>
+                                        <span className="text-sm sm:text-base font-bold font-mono text-[#fdfbf7]">{item.time}</span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}
