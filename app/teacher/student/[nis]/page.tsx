@@ -7,8 +7,9 @@ import Jurnal from '@/models/Jurnal';
 import Siswa from '@/models/Siswa';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronLeft, Check, X, Clock, Moon, Sun, BookOpen, Activity, Heart, Users, MapPin, Globe, ExternalLink } from 'lucide-react';
+import { ChevronLeft, Check, X, Clock, Moon, Sun, BookOpen, Activity, Heart, Users, MapPin, Globe, ExternalLink, Trash2 } from 'lucide-react';
 import TeacherNoteInput from '@/components/TeacherNoteInput';
+import { JournalImage } from '@/components/JournalImages';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -249,8 +250,12 @@ export default async function StudentJournalPage({ params }: { params: Promise<{
                                                                     </p>
                                                                     {journal.aktifitas_sosial.foto && (
                                                                         <div className="w-24 h-24 bg-gray-100 rounded border border-gray-300 overflow-hidden cursor-pointer hover:scale-105 transition-transform">
-                                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                                            <img src={journal.aktifitas_sosial.foto} alt="Foto Sosial" className="w-full h-full object-cover" />
+                                                                            <JournalImage
+                                                                                journalId={journal._id}
+                                                                                field="aktifitas_sosial"
+                                                                                photoUrl={journal.aktifitas_sosial.foto}
+                                                                                alt="Foto Sosial"
+                                                                            />
                                                                         </div>
                                                                     )}
                                                                 </div>
@@ -271,8 +276,8 @@ export default async function StudentJournalPage({ params }: { params: Promise<{
                                                             {/* Tipe Badge & Links */}
                                                             <div className='flex flex-wrap gap-2 mb-3'>
                                                                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase inline-flex items-center gap-1 border ${(journal.catatan_ihsan.tipe === 'Daring')
-                                                                    ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                                                    : 'bg-green-50 text-green-700 border-green-200'
+                                                                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                                                        : 'bg-green-50 text-green-700 border-green-200'
                                                                     }`}>
                                                                     {journal.catatan_ihsan.tipe === 'Daring' ? <Globe className="w-3 h-3" /> : <MapPin className="w-3 h-3" />}
                                                                     {journal.catatan_ihsan.tipe || 'Langsung'}
@@ -289,6 +294,7 @@ export default async function StudentJournalPage({ params }: { params: Promise<{
                                                                     </a>
                                                                 )}
 
+                                                                {/* Lokasi GPS Display */}
                                                                 {journal.catatan_ihsan.tipe === 'Langsung' && journal.catatan_ihsan.lokasi && (
                                                                     <a
                                                                         href={`https://www.google.com/maps/search/?api=1&query=${journal.catatan_ihsan.lokasi}`}
@@ -322,8 +328,12 @@ export default async function StudentJournalPage({ params }: { params: Promise<{
                                                             {journal.catatan_ihsan?.foto && (
                                                                 <div className="mb-3 inline-block bg-white p-1 border border-gray-200 rounded-sm">
                                                                     <div className="w-full max-w-[200px] h-32 bg-gray-100 overflow-hidden">
-                                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                                        <img src={journal.catatan_ihsan.foto} alt="Bukti Ihsan" className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                                                                        <JournalImage
+                                                                            journalId={journal._id}
+                                                                            field="catatan_ihsan"
+                                                                            photoUrl={journal.catatan_ihsan.foto}
+                                                                            alt="Bukti Ihsan"
+                                                                        />
                                                                     </div>
                                                                 </div>
                                                             )}
