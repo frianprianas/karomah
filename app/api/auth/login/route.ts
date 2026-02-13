@@ -54,7 +54,8 @@ export async function POST(req: Request) {
             username: role === 'siswa' ? (user as any).nis : (role === 'guru' ? (user as any).nipy : (user as any).username),
             role: userRole,
             name: user.nama,
-            kelas: role === 'siswa' ? (user as any).kelas : null
+            kelas: role === 'siswa' ? (user as any).kelas : null,
+            waliKelas: role === 'guru' ? (user as any).waliKelas : null
         });
 
         const cookieStore = await cookies();
@@ -65,7 +66,14 @@ export async function POST(req: Request) {
             path: '/',
         });
 
-        return NextResponse.json({ success: true, user: { name: user.nama, role: userRole } });
+        return NextResponse.json({
+            success: true,
+            user: {
+                name: user.nama,
+                role: userRole,
+                waliKelas: role === 'guru' ? (user as any).waliKelas : undefined
+            }
+        });
     } catch (error) {
         console.error('Login error:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

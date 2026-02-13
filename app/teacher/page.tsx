@@ -33,6 +33,8 @@ async function getStudentsWithProgress() {
     })) as any[];
 }
 
+import Guru from '@/models/Guru';
+
 export default async function TeacherDashboard() {
     const session = await getSession();
 
@@ -44,14 +46,50 @@ export default async function TeacherDashboard() {
         redirect('/dashboard');
     }
 
+    await connectDB();
+    const teacher = await Guru.findOne({ nipy: (session as any).username }).lean();
+
+    console.log("--- DEBUG DASHBOARD GURU ---");
+    console.log("Guru Logged In:", (session as any).name);
+    console.log("Guru NIPY:", (session as any).username);
+    console.log("Guru Data from DB:", JSON.stringify(teacher, null, 2));
+
     const allStudents = await getStudentsWithProgress();
+    console.log("Total Students fetched:", allStudents.length);
 
     // Filter data sampah (kelas 'nama', 'nis', dll) yang mungkin lolos dari DB
-    const students = allStudents.filter(s => {
+    let students = allStudents.filter(s => {
         const k = s.kelas ? s.kelas.toLowerCase().trim() : '';
         // Pastikan kelas valid (bukan header CSV dan panjang > 1)
         return k && k.length > 1 && !['nama', 'nis', 'kelas', 'password', 'no'].includes(k);
     });
+
+    console.log("Total Valid Students:", students.length);
+
+    // Filter berdasarkan Role Guru
+    if (teacher) {
+        console.log("Checking Filter Rule...");
+        console.log("Teacher Role (ket):", teacher.ket);
+        console.log("Teacher Wali Kelas:", teacher.waliKelas);
+
+        // Jika hanya Wali Kelas (bukan Guru PAI/Keduanya), filter hanya kelas yang diampu
+        if (teacher.ket === 'Wali Kelas') {
+            const targetClass = teacher.waliKelas ? teacher.waliKelas.trim().toLowerCase() : '';
+            console.log("Filtering for target class:", targetClass);
+
+            students = students.filter(s => {
+                const studentClass = s.kelas ? s.kelas.trim().toLowerCase() : '';
+                // console.log(`Comparing student class '${studentClass}' with '${targetClass}'`); 
+                return studentClass && studentClass === targetClass;
+            });
+            console.log("Students after filter:", students.length);
+        } else {
+            console.log("Teacher is PAI/Keduanya, showing all students.");
+        }
+    } else {
+        console.log("Teacher data not found in DB!");
+    }
+    console.log("---------------------------");
 
     const groupedStudents = students.reduce((acc: any, student) => {
         const k = student.kelas || 'Tanpa Kelas';
@@ -95,26 +133,29 @@ export default async function TeacherDashboard() {
                         <span className="relative z-10 text-sm whitespace-nowrap">Log Aktifitas Siswa</span>
                     </Link>
 
-                    <Link
-                        href="/teacher/qna"
-                        className={`flex-1 flex justify-center items-center gap-2 px-6 py-3 rounded-full font-serif font-bold shadow-lg transition-all hover:-translate-y-1 active:scale-95 border-2 group relative overflow-hidden ${pendingQuestionsCount > 0
-                            ? 'bg-yellow-400 text-[#3e2723] border-yellow-600 hover:bg-yellow-300 animate-pulse-subtle'
-                            : 'bg-[#fdfbf7] text-[#5d4037] border-[#5d4037] hover:bg-[#efebe9]'
-                            }`}
-                    >
-                        <div className={`absolute inset-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ${pendingQuestionsCount > 0 ? 'bg-white/20' : 'bg-[#5d4037]/10'}`}></div>
+                    {/* Hanya Guru PAI atau Guru Keduanya (Wali Kelas & Guru PAI) yang bisa melihat Tanya Jawab */}
+                    {teacher && (teacher.ket === 'Guru PAI' || teacher.ket === 'Keduanya') && (
+                        <Link
+                            href="/teacher/qna"
+                            className={`flex-1 flex justify-center items-center gap-2 px-6 py-3 rounded-full font-serif font-bold shadow-lg transition-all hover:-translate-y-1 active:scale-95 border-2 group relative overflow-hidden ${pendingQuestionsCount > 0
+                                ? 'bg-yellow-400 text-[#3e2723] border-yellow-600 hover:bg-yellow-300 animate-pulse-subtle'
+                                : 'bg-[#fdfbf7] text-[#5d4037] border-[#5d4037] hover:bg-[#efebe9]'
+                                }`}
+                        >
+                            <div className={`absolute inset-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ${pendingQuestionsCount > 0 ? 'bg-white/20' : 'bg-[#5d4037]/10'}`}></div>
 
-                        <div className="relative z-10 flex items-center gap-2">
-                            <MessageCircle className="w-5 h-5" />
-                            <span className="text-sm whitespace-nowrap">Tanya Jawab Santri</span>
+                            <div className="relative z-10 flex items-center gap-2">
+                                <MessageCircle className="w-5 h-5" />
+                                <span className="text-sm whitespace-nowrap">Tanya Jawab Santri</span>
 
-                            {pendingQuestionsCount > 0 && (
-                                <span className="ml-1 bg-red-600 text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-white animate-bounce">
-                                    {pendingQuestionsCount}
-                                </span>
-                            )}
-                        </div>
-                    </Link>
+                                {pendingQuestionsCount > 0 && (
+                                    <span className="ml-1 bg-red-600 text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-white animate-bounce">
+                                        {pendingQuestionsCount}
+                                    </span>
+                                )}
+                            </div>
+                        </Link>
+                    )}
                 </div>
 
                 <TeacherDashboardClient groupedStudents={groupedStudents} />

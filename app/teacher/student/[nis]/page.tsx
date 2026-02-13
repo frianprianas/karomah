@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { ChevronLeft, Check, X, Clock, Moon, Sun, BookOpen, Activity, Heart, Users, MapPin, Globe, ExternalLink, Trash2 } from 'lucide-react';
 import TeacherNoteInput from '@/components/TeacherNoteInput';
 import { JournalImage } from '@/components/JournalImages';
+import DownloadReportButton from '@/components/DownloadReportButton';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -20,7 +21,12 @@ async function getStudentData(nis: string) {
     const journals = await Jurnal.find({ nis }).sort({ tgl_jurnal: 1 }).lean();
     return {
         student: student ? { ...student, _id: (student as any)._id.toString() } : null,
-        journals: journals.map(j => ({ ...j, _id: (j as any)._id.toString() }))
+        journals: journals.map(j => ({
+            ...j,
+            _id: (j as any)._id.toString(),
+            createdAt: j.createdAt ? new Date(j.createdAt).toISOString() : null,
+            updatedAt: j.updatedAt ? new Date(j.updatedAt).toISOString() : null
+        }))
     };
 }
 
@@ -89,6 +95,11 @@ export default async function StudentJournalPage({ params }: { params: Promise<{
                                 <span className="block text-[#8d6e63] uppercase text-[10px] tracking-widest font-bold">Progress</span>
                                 <span className="font-bold text-[#5d4037] text-2xl">{Math.round((journals.length / 30) * 100)}%</span>
                             </div>
+                        </div>
+
+                        {/* Tombol PDF */}
+                        <div className="flex justify-center mt-6">
+                            <DownloadReportButton student={student} journals={journals} />
                         </div>
                     </div>
 
@@ -389,6 +400,6 @@ export default async function StudentJournalPage({ params }: { params: Promise<{
                     </div>
                 </div>
             </main>
-        </div>
+        </div >
     );
 }

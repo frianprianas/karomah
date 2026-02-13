@@ -18,12 +18,32 @@ export default function AdminManagement() {
         nama: '',
         kelas: '',
         ket: '',
+        waliKelas: '',
         password: ''
     });
 
     useEffect(() => {
         fetchData();
     }, [activeTab]);
+
+    const [classList, setClassList] = useState<string[]>([]);
+
+    // Fetch classes specifically for suggestions
+    useEffect(() => {
+        const fetchClasses = async () => {
+            try {
+                const res = await fetch('/api/admin/siswa');
+                if (res.ok) {
+                    const students = await res.json();
+                    const classes = [...new Set(students.map((s: any) => s.kelas))].filter(Boolean) as string[];
+                    setClassList(classes.sort());
+                }
+            } catch (e) {
+                console.error("Failed to fetch classes for suggestion", e);
+            }
+        };
+        fetchClasses();
+    }, [activeTab, showModal]);
 
     const fetchData = async () => {
         setLoading(true);
@@ -47,6 +67,7 @@ export default function AdminManagement() {
                 nama: item.nama || '',
                 kelas: item.kelas || '',
                 ket: item.ket || '',
+                waliKelas: item.waliKelas || '',
                 password: '' // Don't show password
             });
         } else {
@@ -57,6 +78,7 @@ export default function AdminManagement() {
                 nama: '',
                 kelas: '',
                 ket: '',
+                waliKelas: '',
                 password: ''
             });
         }
@@ -169,7 +191,7 @@ export default function AdminManagement() {
                             <tr>
                                 <th className="p-4 border-b border-[#3e2723]">{activeTab === 'siswa' ? 'NIS' : 'NIPY'}</th>
                                 <th className="p-4 border-b border-[#3e2723]">Nama</th>
-                                <th className="p-4 border-b border-[#3e2723]">{activeTab === 'siswa' ? 'Kelas' : 'Keterangan'}</th>
+                                <th className="p-4 border-b border-[#3e2723]">{activeTab === 'siswa' ? 'Kelas' : 'Detail'}</th>
                                 <th className="p-4 border-b border-[#3e2723] text-center w-32">Aksi</th>
                             </tr>
                         </thead>
@@ -183,7 +205,21 @@ export default function AdminManagement() {
                                     <tr key={item._id} className="hover:bg-[#d7ccc8]/30 transition-colors border-b border-[#d7ccc8]/50">
                                         <td className="p-4 whitespace-nowrap">{item.nis || item.nipy}</td>
                                         <td className="p-4 font-bold">{item.nama}</td>
-                                        <td className="p-4 italic">{item.kelas || item.ket || '-'}</td>
+                                        <td className="p-4 italic">
+                                            {activeTab === 'siswa'
+                                                ? item.kelas
+                                                : (
+                                                    <div className="flex flex-col">
+                                                        <span>{item.ket || '-'}</span>
+                                                        {item.waliKelas && (
+                                                            <span className="text-xs text-[#5d4037] font-bold bg-[#d7ccc8]/50 px-2 py-0.5 rounded-full w-fit mt-1">
+                                                                Wali Kelas: {item.waliKelas}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )
+                                            }
+                                        </td>
                                         <td className="p-4">
                                             <div className="flex justify-center gap-2">
                                                 <button
@@ -241,7 +277,7 @@ export default function AdminManagement() {
             {/* Modal */}
             {showModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-[#fdfbf7] w-full max-w-md p-8 rounded-sm border-2 border-[#8d6e63] shadow-2xl relative bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')]">
+                    <div className="bg-[#fdfbf7] w-full max-w-md p-8 rounded-sm border-2 border-[#8d6e63] shadow-2xl relative bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] max-h-[90vh] overflow-y-auto">
                         {/* Decorative internal border */}
                         <div className="absolute inset-2 border border-dashed border-[#8d6e63] opacity-30 pointer-events-none"></div>
 
@@ -280,26 +316,68 @@ export default function AdminManagement() {
                             </div>
 
                             <div>
-                                <label className="block text-sm text-[#5d4037] mb-1">{activeTab === 'siswa' ? 'Kelas' : 'Keterangan'}</label>
+                                <label className="block text-sm text-[#5d4037] mb-1">{activeTab === 'siswa' ? 'Kelas' : 'Jabatan'}</label>
                                 <div className="relative">
-                                    <input
-                                        type="text"
-                                        required={activeTab === 'siswa'}
-                                        list={activeTab === 'siswa' ? "classList" : undefined}
-                                        value={activeTab === 'siswa' ? formData.kelas : formData.ket}
-                                        onChange={(e) => setFormData({ ...formData, [activeTab === 'siswa' ? 'kelas' : 'ket']: e.target.value })}
-                                        className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:border-[#5d4037] outline-none text-[#3e2723]"
-                                        placeholder={activeTab === 'siswa' ? "Pilih atau ketik kelas baru..." : "Keterangan guru..."}
-                                    />
-                                    {activeTab === 'siswa' && (
-                                        <datalist id="classList">
-                                            {Array.from(new Set(data.map((item: any) => item.kelas))).filter(Boolean).sort().map((k: any) => (
-                                                <option key={k} value={k} />
-                                            ))}
-                                        </datalist>
+                                    {activeTab === 'siswa' ? (
+                                        <>
+                                            <input
+                                                type="text"
+                                                required
+                                                list="classListData"
+                                                value={formData.kelas}
+                                                onChange={(e) => setFormData({ ...formData, kelas: e.target.value })}
+                                                className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:border-[#5d4037] outline-none text-[#3e2723]"
+                                                placeholder="Pilih atau ketik kelas baru..."
+                                            />
+                                            <datalist id="classListData">
+                                                {classList.map((k: string) => (
+                                                    <option key={k} value={k} />
+                                                ))}
+                                            </datalist>
+                                        </>
+                                    ) : (
+                                        <select
+                                            value={formData.ket}
+                                            onChange={(e) => setFormData({ ...formData, ket: e.target.value })}
+                                            className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:border-[#5d4037] outline-none text-[#3e2723]"
+                                        >
+                                            <option value="">Pilih Jabatan...</option>
+                                            <option value="Wali Kelas">Wali Kelas</option>
+                                            <option value="Guru PAI">Guru PAI</option>
+                                            <option value="Keduanya">Keduanya (Wali Kelas & Guru PAI)</option>
+                                        </select>
                                     )}
                                 </div>
                             </div>
+
+                            {activeTab === 'guru' && (formData.ket === 'Wali Kelas' || formData.ket === 'Keduanya') && (
+                                <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <label className="block text-sm text-[#5d4037] mb-1">Wali Kelas Untuk</label>
+                                    <div className="relative">
+                                        <select
+                                            required={true}
+                                            value={formData.waliKelas}
+                                            onChange={(e) => setFormData({ ...formData, waliKelas: e.target.value })}
+                                            className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:border-[#5d4037] outline-none text-[#3e2723]"
+                                        >
+                                            <option value="">-- Pilih Kelas --</option>
+                                            {classList.map((k: string) => (
+                                                <option key={k} value={k}>{k}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    {formData.waliKelas && (
+                                        <p className={`text-xs mt-1 ${classList.some(c => c.toLowerCase() === formData.waliKelas.toLowerCase())
+                                            ? "text-green-600 font-bold"
+                                            : "text-red-500 font-bold"
+                                            }`}>
+                                            {classList.some(c => c.toLowerCase() === formData.waliKelas.toLowerCase())
+                                                ? "✓ Kelas valid (Data siswa tersedia)"
+                                                : "⚠ Peringatan: Kelas ini belum memiliki data siswa!"}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
 
                             <div>
                                 <label className="block text-sm text-[#5d4037] mb-1">

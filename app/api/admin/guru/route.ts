@@ -28,14 +28,17 @@ export async function POST(req: Request) {
         }
 
         await connectDB();
-        const { nipy, nama, ket, password } = await req.json();
+        const body = await req.json();
+        console.log("POST /api/admin/guru received:", body);
+        const { nipy, nama, ket, password, waliKelas } = body;
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const newGuru = new Guru({
             nipy,
             nama,
             ket,
-            password: hashedPassword
+            password: hashedPassword,
+            waliKelas: waliKelas || null
         });
 
         await newGuru.save();
@@ -53,9 +56,17 @@ export async function PUT(req: Request) {
         }
 
         await connectDB();
-        const { _id, nipy, nama, ket, password } = await req.json();
+        const body = await req.json();
+        console.log("PUT /api/admin/guru received:", body);
+        const { _id, nipy, nama, ket, password, waliKelas } = body;
 
-        const updateData: any = { nipy, nama, ket };
+        const updateData: any = {
+            nipy,
+            nama,
+            ket,
+            waliKelas: waliKelas || null
+        };
+
         if (password) {
             updateData.password = await bcrypt.hash(password, 10);
         }
