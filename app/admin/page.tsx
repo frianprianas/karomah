@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import AdminManagement from '@/components/AdminManagement';
+import AdminStoriesManagement from '@/components/AdminStoriesManagement';
 import Image from 'next/image';
 
 import Link from 'next/link';
@@ -44,6 +45,9 @@ export default async function AdminDashboard() {
                 </div>
 
                 <AdminManagement />
+
+                {/* Moderasi Stories */}
+                <AdminStoriesManagement />
             </main>
         </div>
     );

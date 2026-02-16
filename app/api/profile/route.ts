@@ -53,6 +53,15 @@ export async function PUT(req: Request) {
         const hasStatusChanged = status && status !== oldUser?.status;
         const hasBioChanged = (noHp && noHp !== oldUser?.noHp) || (foto && foto !== oldUser?.foto) || (emailPribadi && emailPribadi !== oldUser?.emailPribadi);
 
+        // --- VALIDASI BAN ---
+        if (hasStatusChanged && oldUser?.statusBannedUntil && new Date() < new Date(oldUser.statusBannedUntil)) {
+            const timeDiff = new Date(oldUser.statusBannedUntil).getTime() - new Date().getTime();
+            const hoursLeft = Math.ceil(timeDiff / (1000 * 60 * 60));
+            return NextResponse.json({
+                error: `Anda tidak dapat update status karena melanggar aturan. Blokir berakhir dalam ${hoursLeft} jam lagi.`
+            }, { status: 403 });
+        }
+
         // --- VALIDASI LIMIT HARIAN ---
         if (hasStatusChanged) {
             const statusCount = await Aktivitas.countDocuments({
@@ -110,6 +119,15 @@ export async function PUT(req: Request) {
 
         const hasStatusChanged = status && status !== oldUser?.status;
         const hasBioChanged = (noHp && noHp !== oldUser?.noHp) || (foto && foto !== oldUser?.foto) || (emailPribadi && emailPribadi !== oldUser?.emailPribadi);
+
+        // --- VALIDASI BAN GURU ---
+        if (hasStatusChanged && oldUser?.statusBannedUntil && new Date() < new Date(oldUser.statusBannedUntil)) {
+            const timeDiff = new Date(oldUser.statusBannedUntil).getTime() - new Date().getTime();
+            const hoursLeft = Math.ceil(timeDiff / (1000 * 60 * 60));
+            return NextResponse.json({
+                error: `Anda tidak dapat update status karena melanggar aturan. Blokir berakhir dalam ${hoursLeft} jam lagi.`
+            }, { status: 403 });
+        }
 
         // --- VALIDASI LIMIT HARIAN GURU ---
         if (hasStatusChanged) {

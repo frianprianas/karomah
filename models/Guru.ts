@@ -12,6 +12,7 @@ export interface IGuru extends Document {
     status?: string;
     statusUpdatedAt?: Date;
     emailPribadi?: string;
+    statusBannedUntil?: Date;
 }
 
 const GuruSchema: Schema = new Schema({
@@ -24,7 +25,8 @@ const GuruSchema: Schema = new Schema({
     noHp: { type: String },
     status: { type: String },
     statusUpdatedAt: { type: Date },
-    emailPribadi: { type: String }
+    emailPribadi: { type: String },
+    statusBannedUntil: { type: Date }
 });
 
 // Prevent Mongoose from using a stale cached model in development
