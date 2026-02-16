@@ -112,8 +112,12 @@ export default async function TeacherDashboard() {
                 {/* Header / Title Page Effect */}
                 <div className="w-full text-center border-b-2 border-double border-[#8d6e63] pb-6 mb-12 mt-4">
                     <div className="flex justify-center mb-6">
-                        <div className="p-1 rounded-full border-2 border-[#8d6e63] shadow-sm">
-                            <Image src="/logo.jpg" alt="Logo" width={90} height={90} className="rounded-full sepia-[.3]" />
+                        <div className="p-1 rounded-full border-2 border-[#8d6e63] shadow-sm w-[94px] h-[94px] overflow-hidden">
+                            {teacher?.foto ? (
+                                <img src={teacher.foto} alt="Foto Profil" className="rounded-full object-cover w-full h-full" />
+                            ) : (
+                                <img src="/logo.jpg" alt="Logo" className="rounded-full sepia-[.3] w-full h-full" />
+                            )}
                         </div>
                     </div>
                     <h1 className="text-4xl font-serif font-bold text-[#3e2723] mb-2 tracking-wide">Ahlan Wa Sahlan</h1>

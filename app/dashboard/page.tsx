@@ -69,15 +69,13 @@ export default async function Dashboard() {
                     <div className="flex justify-center mb-4">
                         <div className="p-1 rounded-full border-2 border-[#8d6e63] shadow-sm overflow-hidden w-[88px] h-[88px]">
                             {student?.foto ? (
-                                <Image
+                                <img
                                     src={student.foto}
                                     alt="Foto Profil"
-                                    width={80}
-                                    height={80}
                                     className="object-cover w-full h-full"
                                 />
                             ) : (
-                                <Image src="/logo.jpg" alt="Logo" width={80} height={80} className="rounded-full sepia-[.3]" />
+                                <img src="/logo.jpg" alt="Logo" className="rounded-full sepia-[.3] w-20 h-20" />
                             )}
                         </div>
                     </div>
