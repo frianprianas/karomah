@@ -61,7 +61,7 @@ export default async function Dashboard() {
 
     return (
         <div className="min-h-screen bg-[#fdfbf7] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] pb-20">
-            <Navbar user={session as any} />
+            <Navbar user={{ ...session as any, foto: student?.foto }} />
 
             <main className="max-w-4xl mx-auto p-6 flex flex-col items-center">
                 {/* Header / Title Page Effect */}
@@ -91,7 +91,7 @@ export default async function Dashboard() {
                             <div className="max-w-md mx-auto my-2 px-4">
                                 <p className="text-[#8d6e63] italic text-sm font-serif relative inline-block">
                                     <span className="text-xl absolute -left-2 -top-1 opacity-40">“</span>
-                                    {student.status}
+                                    {student?.status}
                                     <span className="text-xl absolute -right-2 -bottom-2 opacity-40">”</span>
                                 </p>
                             </div>

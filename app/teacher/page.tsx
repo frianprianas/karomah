@@ -106,7 +106,7 @@ export default async function TeacherDashboard() {
 
     return (
         <div className="min-h-screen bg-[#fdfbf7] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] pb-20 font-serif">
-            <Navbar user={session as any} />
+            <Navbar user={{ ...session as any, foto: teacher?.foto }} />
 
             <main className="max-w-6xl mx-auto p-4 sm:p-6 flex flex-col items-center">
                 {/* Header / Title Page Effect */}

@@ -47,6 +47,11 @@ export default function ProfilePage() {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Ukuran file terlalu besar! Maksimal 5MB');
+            return;
+        }
+
         // Preview local
         setPreviewFoto(URL.createObjectURL(file));
 
@@ -64,10 +69,11 @@ export default function ProfilePage() {
             if (json.success) {
                 setFotoUrl(json.url);
             } else {
-                alert('Gagal upload foto!');
+                alert('Gagal upload foto: ' + (json.message || 'Coba lagi'));
             }
-        } catch (e) {
-            alert('Upload error!');
+        } catch (e: any) {
+            console.error('Upload error:', e);
+            alert('Terjadi kesalahan saat upload! Pastikan koneksi internet aktif.');
         } finally {
             setUploading(false);
         }
@@ -89,15 +95,17 @@ export default function ProfilePage() {
                 })
             });
 
-            if (res.ok) {
+            const json = await res.json();
+            if (res.ok && json.success) {
                 alert('Profil berhasil diperbarui!');
+                setPreviewFoto(''); // Clear preview because we'll use actual updated URL
                 fetchProfile(); // Refresh Data
             } else {
-                alert('Gagal memperbarui profil.');
+                alert('Gagal memperbarui profil: ' + (json.error || 'Silakan coba lagi.'));
             }
-        } catch (e) {
-            console.error(e);
-            alert('Terjadi kesalahan.');
+        } catch (e: any) {
+            console.error('Save error:', e);
+            alert('Terjadi kesalahan saat menyimpan data.');
         } finally {
             setSaving(false);
         }
@@ -148,11 +156,9 @@ export default function ProfilePage() {
                             <div className="relative group">
                                 <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-[#efebe9]">
                                     {previewFoto || fotoUrl ? (
-                                        <Image
+                                        <img
                                             src={previewFoto || fotoUrl}
                                             alt="Foto Profil"
-                                            width={128}
-                                            height={128}
                                             className="object-cover w-full h-full"
                                         />
                                     ) : (
@@ -174,6 +180,11 @@ export default function ProfilePage() {
                                     />
                                 </label>
                             </div>
+                            {uploading && (
+                                <div className="absolute top-2 -right-16 bg-white/80 px-2 py-1 rounded text-[10px] font-bold text-[#5d4037] shadow-sm">
+                                    Uploading...
+                                </div>
+                            )}
                         </div>
 
                         {/* Name & Basic Info - Beside Avatar but pushed down */}

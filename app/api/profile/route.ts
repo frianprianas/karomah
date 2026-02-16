@@ -52,23 +52,28 @@ export async function PUT(req: Request) {
         ).select('-password');
 
         if (updatedUser) {
-            const hasStatusChanged = status && status !== oldUser?.status;
-            const hasBioChanged = (noHp && noHp !== oldUser?.noHp) || (foto && foto !== oldUser?.foto) || (emailPribadi && emailPribadi !== oldUser?.emailPribadi);
+            try {
+                const hasStatusChanged = status && status !== oldUser?.status;
+                const hasBioChanged = (noHp && noHp !== oldUser?.noHp) || (foto && foto !== oldUser?.foto) || (emailPribadi && emailPribadi !== oldUser?.emailPribadi);
 
-            if (hasStatusChanged) {
-                await Aktivitas.create({
-                    nis,
-                    tipe: 'status',
-                    aksi: status
-                });
-            }
+                if (hasStatusChanged) {
+                    await Aktivitas.create({
+                        nis,
+                        tipe: 'status',
+                        aksi: status
+                    });
+                }
 
-            if (hasBioChanged) {
-                await Aktivitas.create({
-                    nis,
-                    tipe: 'biodata',
-                    aksi: 'Memperbarui profil (Biodata/Foto)'
-                });
+                if (hasBioChanged) {
+                    await Aktivitas.create({
+                        nis,
+                        tipe: 'biodata',
+                        aksi: 'Memperbarui profil (Biodata/Foto)'
+                    });
+                }
+            } catch (logError) {
+                console.error('Logging activity failed:', logError);
+                // Kita tidak return error agar update profil tetap jalan
             }
         }
     } else if (session.role === 'guru') {

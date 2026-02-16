@@ -7,7 +7,7 @@ import { LogOut, BookOpen, User } from 'lucide-react';
 import Image from 'next/image';
 import { logout } from '@/lib/auth'; // Wait, logout is server action or utility? Need to implement client-side logout handler or API call.
 
-export default function Navbar({ user }: { user?: { name: string; role: string; kelas?: string | null } }) {
+export default function Navbar({ user }: { user?: { name: string; role: string; kelas?: string | null; foto?: string | null } }) {
     const router = useRouter();
     const pathname = usePathname();
 
@@ -54,11 +54,19 @@ export default function Navbar({ user }: { user?: { name: string; role: string; 
                         </Link>
                         <Link
                             href="/profile"
-                            className="group flex items-center justify-center p-2 rounded-full border border-[#d7ccc8] hover:bg-[#d7ccc8]/30 transition-all text-[#5d4037]"
+                            className="group flex items-center justify-center p-0.5 rounded-full border border-[#d7ccc8] hover:bg-[#d7ccc8]/30 transition-all text-[#5d4037] overflow-hidden w-8 h-8 sm:w-10 sm:h-10"
                             aria-label="Profil Saya"
                             title="Profil Saya"
                         >
-                            <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                            {user.foto ? (
+                                <img
+                                    src={user.foto}
+                                    alt="Foto Profil"
+                                    className="w-full h-full object-cover rounded-full"
+                                />
+                            ) : (
+                                <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                            )}
                         </Link>
 
                         {/* Compact Logout */}

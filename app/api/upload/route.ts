@@ -14,16 +14,30 @@ export async function POST(req: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
+    if (buffer.length > 5 * 1024 * 1024) {
+        return NextResponse.json({ success: false, message: 'File too large (Max 5MB)' }, { status: 400 });
+    }
+
+    const uploadDir = join(process.cwd(), 'public/uploads/profile');
+
+    // Ensure directory exists
+    try {
+        const { mkdir } = await import('fs/promises');
+        await mkdir(uploadDir, { recursive: true });
+    } catch (err) {
+        console.error('Directory creation failed:', err);
+    }
+
     // Ensure filename is safe and unique
     const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
-    const path = join(process.cwd(), 'public/uploads/profile', filename);
+    const path = join(uploadDir, filename);
 
     try {
         await writeFile(path, buffer);
         console.log(`Saved file to ${path}`);
         return NextResponse.json({ success: true, url: `/uploads/profile/${filename}` });
-    } catch (e) {
-        console.error('Upload error:', e);
-        return NextResponse.json({ success: false, message: 'Failed to save file' }, { status: 500 });
+    } catch (e: any) {
+        console.error('File write error:', e);
+        return NextResponse.json({ success: false, message: 'Failed to save file: ' + e.message }, { status: 500 });
     }
 }
