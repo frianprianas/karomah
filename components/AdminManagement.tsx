@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { UserPlus, Edit, Trash2, X, Save, GraduationCap, School, Search } from 'lucide-react';
+import { UserPlus, Edit, Trash2, X, Save, GraduationCap, School, Search, ImageOff, User } from 'lucide-react';
 
 export default function AdminManagement() {
     const [activeTab, setActiveTab] = useState<'siswa' | 'guru'>('siswa');
@@ -119,6 +119,27 @@ export default function AdminManagement() {
         }
     };
 
+    const handleDeletePhoto = async (id: string, role: string) => {
+        if (!confirm('Hapus foto profil ini karena melanggar aturan?')) return;
+
+        try {
+            const res = await fetch('/api/admin/photo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, role })
+            });
+
+            if (res.ok) {
+                alert('Foto profil berhasil dihapus');
+                fetchData();
+            } else {
+                alert('Gagal menghapus foto');
+            }
+        } catch (error) {
+            alert('Kesalahan sistem');
+        }
+    };
+
     const filteredData = data.filter(item =>
         item.nama?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (item.nis || item.nipy)?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -189,6 +210,7 @@ export default function AdminManagement() {
                     <table className="w-full text-left font-serif border-collapse">
                         <thead className="bg-[#5d4037] text-[#f0e6d2]">
                             <tr>
+                                <th className="p-4 border-b border-[#3e2723] w-16">Foto</th>
                                 <th className="p-4 border-b border-[#3e2723]">{activeTab === 'siswa' ? 'NIS' : 'NIPY'}</th>
                                 <th className="p-4 border-b border-[#3e2723]">Nama</th>
                                 <th className="p-4 border-b border-[#3e2723]">{activeTab === 'siswa' ? 'Kelas' : 'Detail'}</th>
@@ -203,6 +225,21 @@ export default function AdminManagement() {
                             ) : (
                                 currentData.map((item) => (
                                     <tr key={item._id} className="hover:bg-[#d7ccc8]/30 transition-colors border-b border-[#d7ccc8]/50">
+                                        <td className="p-4">
+                                            <div className="w-10 h-10 rounded-full border border-[#8d6e63] overflow-hidden bg-white/50">
+                                                {item.foto ? (
+                                                    <img
+                                                        src={item.foto.startsWith('/uploads/') ? `/api${item.foto}` : item.foto}
+                                                        alt="Thumb"
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-[#d7ccc8]">
+                                                        <User className="w-5 h-5" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </td>
                                         <td className="p-4 whitespace-nowrap">{item.nis || item.nipy}</td>
                                         <td className="p-4 font-bold">{item.nama}</td>
                                         <td className="p-4 italic">
@@ -222,6 +259,15 @@ export default function AdminManagement() {
                                         </td>
                                         <td className="p-4">
                                             <div className="flex justify-center gap-2">
+                                                {item.foto && (
+                                                    <button
+                                                        onClick={() => handleDeletePhoto(item._id, activeTab)}
+                                                        className="p-2 text-orange-600 hover:bg-orange-600 hover:text-white rounded-sm transition-all"
+                                                        title="Hapus Foto Profil"
+                                                    >
+                                                        <ImageOff className="w-4 h-4" />
+                                                    </button>
+                                                )}
                                                 <button
                                                     onClick={() => handleOpenModal(item)}
                                                     className="p-2 text-[#5d4037] hover:bg-[#5d4037] hover:text-white rounded-sm transition-all"
