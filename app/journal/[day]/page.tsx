@@ -37,6 +37,21 @@ export default async function JournalPage({ params }: { params: Promise<{ day: s
         redirect('/dashboard');
     }
 
+    // --- SEQUENTIAL LOCK CHECK ---
+    if (dayNum > 1) {
+        await connectDB();
+        const prevDayJournal = await Jurnal.findOne({
+            nis: (session as any).username,
+            tgl_jurnal: dayNum - 1
+        });
+
+        const isPrevFull = prevDayJournal && prevDayJournal.jam_tidur && prevDayJournal.jam_tidur.trim().length > 0;
+
+        if (!isPrevFull) {
+            redirect('/dashboard');
+        }
+    }
+
     const existingData = await getJournal((session as any).username, dayNum);
     // Ensure serialization
     const serializedData = existingData ? JSON.parse(JSON.stringify(existingData)) : undefined;
@@ -99,7 +114,7 @@ export default async function JournalPage({ params }: { params: Promise<{ day: s
                     <JournalEntryForm key={dayNum} day={dayNum} initialData={serializedData} />
                 </div>
 
-                <SideNavigation day={dayNum} />
+                <SideNavigation day={dayNum} canGoNext={serializedData?.jam_tidur?.trim()?.length > 0} />
 
                 <div className="mt-8 flex justify-between items-center bg-[#f0e6d2] p-4 rounded-sm border-2 border-[#8d6e63] shadow-sm bg-[url('https://www.transparenttextures.com/patterns/parchment.png')]">
                     {dayNum > 1 ? (
@@ -115,7 +130,7 @@ export default async function JournalPage({ params }: { params: Promise<{ day: s
                         <div></div> // Spacer
                     )}
 
-                    {dayNum < 30 ? (
+                    {dayNum < 30 && serializedData?.jam_tidur?.trim()?.length > 0 ? (
                         <Link
                             href={`/journal/${dayNum + 1}`}
                             className="inline-flex items-center gap-2 text-[#5d4037] font-bold hover:text-[#3e2723] px-3 py-2 rounded transition-all"

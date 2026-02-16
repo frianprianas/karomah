@@ -131,12 +131,55 @@ export default async function Dashboard() {
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-6 w-full max-w-3xl">
                     {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => {
                         const status = journalStatus.get(day);
+                        const isPreviousDayFull = day === 1 || journalStatus.get(day - 1) === 'full';
+                        const isLocked = !isPreviousDayFull;
+
                         let borderClass = "border-[#d7ccc8] bg-[#efebe9] text-[#8d6e63] hover:border-[#8d6e63] hover:bg-[#d7ccc8]";
 
-                        if (status === 'full') {
+                        if (isLocked) {
+                            borderClass = "border-[#d7ccc8]/40 bg-[#efebe9]/50 text-[#8d6e63]/40 cursor-not-allowed opacity-60 grayscale-[0.5]";
+                        } else if (status === 'full') {
                             borderClass = "border-[#2e7d32] bg-[#e8f5e9] text-[#1b5e20] shadow-md";
                         } else if (status === 'partial') {
                             borderClass = "border-[#fbc02d] bg-[#fffde7] text-[#f57f17]";
+                        }
+
+                        const DayContent = (
+                            <>
+                                {/* Decorative internal border */}
+                                <div className="absolute inset-1 border border-dashed border-current opacity-30 pointer-events-none"></div>
+
+                                <span className="text-xs uppercase tracking-widest opacity-70 mb-1">Hari</span>
+                                <span className="text-3xl font-bold">{day}</span>
+
+                                {status === 'full' && !isLocked && (
+                                    <div className="absolute top-1 right-1">
+                                        <CheckCircle className="w-3 h-3" />
+                                    </div>
+                                )}
+
+                                {isLocked && (
+                                    <div className="absolute top-1 right-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                    </div>
+                                )}
+                            </>
+                        );
+
+                        if (isLocked) {
+                            return (
+                                <div
+                                    key={day}
+                                    title="Lengkapi hari sebelumnya untuk membuka hari ini"
+                                    className={`
+                                        relative p-4 rounded-sm border-2 flex flex-col items-center justify-center transition-all duration-300
+                                        font-serif group
+                                        ${borderClass}
+                                    `}
+                                >
+                                    {DayContent}
+                                </div>
+                            );
                         }
 
                         return (
@@ -150,17 +193,7 @@ export default async function Dashboard() {
                                 `}
                                 style={{ boxShadow: status === 'full' ? 'inset 0 0 10px rgba(46, 125, 50, 0.1)' : 'none' }}
                             >
-                                {/* Decorative internal border */}
-                                <div className="absolute inset-1 border border-dashed border-current opacity-30 pointer-events-none"></div>
-
-                                <span className="text-xs uppercase tracking-widest opacity-70 mb-1">Hari</span>
-                                <span className="text-3xl font-bold">{day}</span>
-
-                                {status === 'full' && (
-                                    <div className="absolute top-1 right-1">
-                                        <CheckCircle className="w-3 h-3" />
-                                    </div>
-                                )}
+                                {DayContent}
                             </Link>
                         )
                     })}
