@@ -9,6 +9,7 @@ import { rateLimit } from '@/lib/rate-limit'; // Import
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 import { sendOTP } from '@/lib/mail';
+import { sendWhatsAppOTP } from '@/lib/whatsapp';
 
 export async function POST(req: Request) {
     try {
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
         // ---------------------
 
         await connectDB();
-        const { id, password, role } = await req.json();
+        const { id, password, role, otpMethod = 'email' } = await req.json();
 
         let user = null;
         let userRole = role;
@@ -58,17 +59,31 @@ export async function POST(req: Request) {
                 $set: { otp: otpCode, otpExpires }
             });
 
-            // Kirim Email
-            const adminEmail = (user as any).emailPribadi;
-            if (!adminEmail) {
-                return NextResponse.json({ error: 'Email admin belum diset pada profil. Silakan hubungi operator.' }, { status: 400 });
-            }
+            if (otpMethod === 'whatsapp') {
+                const adminWA = (user as any).noHp;
+                if (!adminWA) {
+                    return NextResponse.json({ error: 'Nomor WA admin belum diset pada profil. Silakan hubungi operator.' }, { status: 400 });
+                }
 
-            try {
-                await sendOTP(adminEmail, otpCode);
-            } catch (mailError) {
-                console.error('Mail sending failed:', mailError);
-                return NextResponse.json({ error: 'Gagal mengirim email OTP. Periksa konfigurasi mail server.' }, { status: 500 });
+                try {
+                    await sendWhatsAppOTP(adminWA, otpCode);
+                } catch (waError) {
+                    console.error('WhatsApp sending failed:', waError);
+                    return NextResponse.json({ error: 'Gagal mengirim OTP via WA. Periksa konfigurasi Fonnte.' }, { status: 500 });
+                }
+            } else {
+                // Kirim Email (Default)
+                const adminEmail = (user as any).emailPribadi;
+                if (!adminEmail) {
+                    return NextResponse.json({ error: 'Email admin belum diset pada profil. Silakan hubungi operator.' }, { status: 400 });
+                }
+
+                try {
+                    await sendOTP(adminEmail, otpCode);
+                } catch (mailError) {
+                    console.error('Mail sending failed:', mailError);
+                    return NextResponse.json({ error: 'Gagal mengirim email OTP. Periksa konfigurasi mail server.' }, { status: 500 });
+                }
             }
 
             // Set temporary OTP pending token
@@ -90,7 +105,9 @@ export async function POST(req: Request) {
             return NextResponse.json({
                 success: true,
                 needsOTP: true,
-                message: 'OTP telah dikirim ke email Anda. Silakan cek Inbox atau folder SPAM.'
+                message: otpMethod === 'whatsapp'
+                    ? 'OTP telah dikirim ke WhatsApp Anda.'
+                    : 'OTP telah dikirim ke email Anda. Silakan cek Inbox atau folder SPAM.'
             });
         }
 

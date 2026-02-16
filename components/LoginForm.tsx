@@ -16,6 +16,7 @@ export default function LoginForm() {
     const [role, setRole] = useState<'siswa' | 'guru' | 'admin'>('siswa');
     const [id, setId] = useState('');
     const [password, setPassword] = useState('');
+    const [otpMethod, setOtpMethod] = useState<'email' | 'whatsapp'>('email');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -29,7 +30,7 @@ export default function LoginForm() {
             const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, password, role }),
+                body: JSON.stringify({ id, password, role, otpMethod }),
             });
 
             const data = await res.json();
@@ -37,7 +38,7 @@ export default function LoginForm() {
             if (!res.ok) throw new Error(data.error || 'Login failed');
 
             if (data.needsOTP) {
-                router.push('/auth/verify-otp');
+                router.push(`/auth/verify-otp?method=${otpMethod}`);
             } else if (role === 'admin') {
                 router.push('/admin');
             } else {
@@ -142,6 +143,41 @@ export default function LoginForm() {
                                 </button>
                             ))}
                         </div>
+
+                        {/* OTP Method Selector (Only for Admin) */}
+                        {role === 'admin' && (
+                            <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-500">
+                                <label className="text-[10px] uppercase tracking-widest font-bold text-[#8d6e63] ml-1">Kirim OTP Lewat:</label>
+                                <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setOtpMethod('email')}
+                                        className={cn(
+                                            "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-serif text-[11px] font-bold border transition-all",
+                                            otpMethod === 'email'
+                                                ? "bg-[#efebe9] border-[#5d4037] text-[#3e2723] shadow-inner"
+                                                : "border-[#d7ccc8] text-[#8d6e63] hover:bg-[#efebe9]/50"
+                                        )}
+                                    >
+                                        <Image src="https://www.google.com/s2/favicons?domain=gmail.com&sz=32" width={14} height={14} alt="Email" className="grayscale opacity-70" />
+                                        EMAIL
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setOtpMethod('whatsapp')}
+                                        className={cn(
+                                            "flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-serif text-[11px] font-bold border transition-all",
+                                            otpMethod === 'whatsapp'
+                                                ? "bg-[#e8f5e9] border-[#2e7d32] text-[#1b5e20] shadow-inner"
+                                                : "border-[#d7ccc8] text-[#8d6e63] hover:bg-[#e8f5e9]/50"
+                                        )}
+                                    >
+                                        <Image src="https://www.google.com/s2/favicons?domain=whatsapp.com&sz=32" width={14} height={14} alt="WA" className="grayscale opacity-70" />
+                                        WHATSAPP
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         {error && (
                             <div className="bg-red-50 text-red-800 p-3 rounded-lg border border-red-200 text-xs font-serif flex items-center shadow-sm">
