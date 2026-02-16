@@ -47,33 +47,55 @@ export default function ProfilePage() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (file.size > 5 * 1024 * 1024) {
-            alert('Ukuran file terlalu besar! Maksimal 5MB');
-            return;
-        }
+        // --- SOLUSI JITU: Kompresi Gambar di Browser ---
+        const compressImage = (file: File): Promise<string> => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new (window as any).Image();
+                    img.src = event.target?.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 400; // Ukuran pas untuk profil
+                        const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
 
-        // Preview local
-        setPreviewFoto(URL.createObjectURL(file));
+                        const ctx = canvas.getContext('2d');
+                        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        // Upload immediately
-        setUploading(true);
-        const formData = new FormData();
-        formData.append('file', file);
+                        // Kompres ke format WebP atau JPEG dengan kualitas 0.7
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        resolve(dataUrl);
+                    };
+                };
+            });
+        };
 
         try {
+            setUploading(true);
+            const compressedBase64 = await compressImage(file);
+
+            // Preview lokal langsung dari base64
+            setPreviewFoto(compressedBase64);
+
+            // Kirim ke API (Kita modif API-nya untuk terima Base64 atau langsung simpan)
             const res = await fetch('/api/upload', {
                 method: 'POST',
-                body: formData
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: compressedBase64 })
             });
+
             const json = await res.json();
             if (json.success) {
                 setFotoUrl(json.url);
             } else {
-                alert('Gagal upload foto: ' + (json.message || 'Coba lagi'));
+                alert('Gagal upload: ' + json.message);
             }
         } catch (e: any) {
             console.error('Upload error:', e);
-            alert('Terjadi kesalahan saat upload! Pastikan koneksi internet aktif.');
+            alert('Gagal memproses foto.');
         } finally {
             setUploading(false);
         }

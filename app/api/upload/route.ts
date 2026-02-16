@@ -1,44 +1,28 @@
 
-import { writeFile } from 'fs/promises';
 import { NextRequest, NextResponse } from 'next/server';
 import { join } from 'path';
 
 export async function POST(req: NextRequest) {
-    const data = await req.formData();
-    const file: File | null = data.get('file') as unknown as File;
-
-    if (!file) {
-        return NextResponse.json({ success: false, message: 'No file uploaded' }, { status: 400 });
-    }
-
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    if (buffer.length > 5 * 1024 * 1024) {
-        return NextResponse.json({ success: false, message: 'File too large (Max 5MB)' }, { status: 400 });
-    }
-
-    const uploadDir = join(process.cwd(), 'public/uploads/profile');
-
-    // Ensure directory exists
     try {
-        const { mkdir } = await import('fs/promises');
-        await mkdir(uploadDir, { recursive: true });
-    } catch (err) {
-        console.error('Directory creation failed:', err);
-    }
+        const body = await req.json();
+        const { image } = body; // Ini berisi Base64 dari Client
 
-    // Ensure filename is safe and unique
-    const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
-    const path = join(uploadDir, filename);
+        if (!image) {
+            return NextResponse.json({ success: false, message: 'No image data' }, { status: 400 });
+        }
 
-    try {
-        await writeFile(path, buffer);
-        console.log(`Saved file to ${path}`);
-        // Gunakan endpoint API baru untuk akses file agar aman di produksi
-        return NextResponse.json({ success: true, url: `/api/uploads/profile/${filename}` });
+        // --- SOLUSI JITU ---
+        // Kita tidak lagi simpan ke Disk (Ubuntu Permission sering error)
+        // Kita langsung kembalikan Base64-nya untuk disimpan di MongoDB field 'foto'
+        // Karena sudah dikompres di client (max 50KB), ini sangat aman untuk DB.
+
+        return NextResponse.json({
+            success: true,
+            url: image // URL sekarang berisi data Base64 panjang murni
+        });
+
     } catch (e: any) {
-        console.error('File write error:', e);
-        return NextResponse.json({ success: false, message: 'Failed to save file: ' + e.message }, { status: 500 });
+        console.error('Upload Error:', e);
+        return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });
     }
 }
