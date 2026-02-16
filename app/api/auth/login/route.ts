@@ -73,7 +73,7 @@ export async function POST(req: Request) {
 
             // Set temporary OTP pending token
             const tempToken = await signToken({
-                id: user._id,
+                id: user._id.toString(),
                 username: (user as any).username,
                 role: 'admin',
                 otpPending: true
@@ -97,7 +97,7 @@ export async function POST(req: Request) {
         // --- NORMAL LOGIN (SISWA/GURU) ---
         // Create token
         const token = await signToken({
-            id: user._id,
+            id: user._id.toString(),
             username: role === 'siswa' ? (user as any).nis : (role === 'guru' ? (user as any).nipy : (user as any).username),
             role: userRole,
             name: user.nama,
