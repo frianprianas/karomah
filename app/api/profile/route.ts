@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth';
 import connectDB from '@/lib/db';
 import Siswa from '@/models/Siswa';
 import Guru from '@/models/Guru';
+import Admin from '@/models/Admin';
 import Aktivitas from '@/models/Aktivitas';
 
 export async function GET(req: Request) {
@@ -19,6 +20,8 @@ export async function GET(req: Request) {
         user = await Siswa.findOne({ nis: (session as any).username }).select('-password');
     } else if (session.role === 'guru') {
         user = await Guru.findOne({ nipy: (session as any).username }).select('-password');
+    } else if (session.role === 'admin') {
+        user = await Admin.findOne({ username: (session as any).username }).select('-password');
     }
 
     if (!user) {
@@ -170,6 +173,13 @@ export async function PUT(req: Request) {
                 console.error('Logging activity failed:', logError);
             }
         }
+    } else if (session.role === 'admin') {
+        const username = (session as any).username;
+        updatedUser = await Admin.findOneAndUpdate(
+            { username },
+            { noHp, status, foto, emailPribadi, statusUpdatedAt: new Date() },
+            { new: true }
+        ).select('-password');
     }
 
     if (!updatedUser) {

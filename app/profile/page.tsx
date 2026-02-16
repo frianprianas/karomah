@@ -146,17 +146,21 @@ export default function ProfilePage() {
         </div>
     );
 
-    const roleLabel = user.nis ? 'Siswa' : 'Guru';
-    const idLabel = user.nis ? 'NIS' : 'NIPY';
-    const idValue = user.nis || user.nipy;
-    const subLabel = user.kelas || user.ket || '-';
+    const isStudent = !!user.nis;
+    const isTeacher = !!user.nipy;
+    const isAdmin = !isStudent && !isTeacher;
+
+    const roleLabel = isStudent ? 'Siswa' : (isTeacher ? 'Guru' : 'Administrator');
+    const idLabel = isStudent ? 'NIS' : (isTeacher ? 'NIPY' : 'Username');
+    const idValue = user.nis || user.nipy || user.username;
+    const subLabel = user.kelas || user.ket || 'Akses Penuh';
 
     return (
         <div className="min-h-screen bg-[#fdfbf7] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] font-serif pb-20">
             {/* Header Simple */}
             <div className="bg-[#5d4037] text-[#fdfbf7] p-4 shadow-md sticky top-0 z-[50]">
                 <div className="max-w-2xl mx-auto flex items-center justify-between">
-                    <Link href={user.nis ? "/dashboard" : "/teacher"} className="flex items-center gap-2 hover:bg-white/10 p-2 rounded-full transition-colors">
+                    <Link href={isStudent ? "/dashboard" : (isTeacher ? "/teacher" : "/admin")} className="flex items-center gap-2 hover:bg-white/10 p-2 rounded-full transition-colors">
                         <ArrowLeft className="w-5 h-5" />
                         <span className="text-sm font-bold hidden sm:inline">Kembali</span>
                     </Link>
@@ -260,19 +264,21 @@ export default function ProfilePage() {
 
                         {/* Email Fields */}
                         <div className="space-y-4 pt-2">
-                            {/* School Email (Read Only) */}
-                            <div>
-                                <label className="block text-sm font-bold text-[#5d4037] mb-2 flex items-center gap-2">
-                                    <Mail className="w-4 h-4 text-blue-600" />
-                                    Email Sekolah (B-Mail)
-                                </label>
-                                <div className="p-3 border border-[#d7ccc8] rounded-lg bg-blue-50/50 text-[#3e2723] font-mono text-sm break-all">
-                                    {idValue.toLowerCase()}@smk.baktinusantara666.sch.id
+                            {/* School Email (Read Only) - Only for Students/Teachers */}
+                            {!isAdmin && (
+                                <div>
+                                    <label className="block text-sm font-bold text-[#5d4037] mb-2 flex items-center gap-2">
+                                        <Mail className="w-4 h-4 text-blue-600" />
+                                        Email Sekolah (B-Mail)
+                                    </label>
+                                    <div className="p-3 border border-[#d7ccc8] rounded-lg bg-blue-50/50 text-[#3e2723] font-mono text-sm break-all">
+                                        {idValue.toLowerCase()}@smk.baktinusantara666.sch.id
+                                    </div>
+                                    <p className="text-[10px] md:text-xs text-blue-700 mt-2 leading-relaxed bg-blue-50 p-2 rounded border border-blue-100 italic">
+                                        💡 Anda bisa login ke email sekolah ini dengan masuk ke <a href="https://baknusmail.smkbn666.sch.id" target="_blank" className="font-bold underline">baknusmail.smkbn666.sch.id</a> dengan password sama dengan aplikasi Karomah ini.
+                                    </p>
                                 </div>
-                                <p className="text-[10px] md:text-xs text-blue-700 mt-2 leading-relaxed bg-blue-50 p-2 rounded border border-blue-100 italic">
-                                    💡 Anda bisa login ke email sekolah ini dengan masuk ke <a href="https://baknusmail.smkbn666.sch.id" target="_blank" className="font-bold underline">baknusmail.smkbn666.sch.id</a> dengan password sama dengan aplikasi Karomah ini.
-                                </p>
-                            </div>
+                            )}
 
                             {/* Personal Email (Editable) */}
                             <div>
