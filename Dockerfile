@@ -28,6 +28,8 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
+# Persiapan folder upload agar bisa ditulis oleh user nextjs
+RUN mkdir -p /app/public/uploads/profile && chown -R nextjs:nodejs /app/public/uploads
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
