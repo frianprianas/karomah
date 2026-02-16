@@ -28,14 +28,16 @@ export async function POST(req: Request) {
         }
 
         await connectDB();
-        const { nis, nama, kelas, password } = await req.json();
+        const { nis, nama, kelas, password, emailPribadi, noHp } = await req.json();
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const newSiswa = new Siswa({
             nis,
             nama,
             kelas,
-            password: hashedPassword
+            password: hashedPassword,
+            emailPribadi,
+            noHp
         });
 
         await newSiswa.save();
@@ -53,9 +55,9 @@ export async function PUT(req: Request) {
         }
 
         await connectDB();
-        const { _id, nis, nama, kelas, password } = await req.json();
+        const { _id, nis, nama, kelas, password, emailPribadi, noHp } = await req.json();
 
-        const updateData: any = { nis, nama, kelas };
+        const updateData: any = { nis, nama, kelas, emailPribadi, noHp };
         if (password) {
             updateData.password = await bcrypt.hash(password, 10);
         }

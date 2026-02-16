@@ -19,7 +19,9 @@ export default function AdminManagement() {
         kelas: '',
         ket: '',
         waliKelas: '',
-        password: ''
+        password: '',
+        emailPribadi: '',
+        noHp: ''
     });
 
     useEffect(() => {
@@ -68,7 +70,9 @@ export default function AdminManagement() {
                 kelas: item.kelas || '',
                 ket: item.ket || '',
                 waliKelas: item.waliKelas || '',
-                password: '' // Don't show password
+                password: '', // Don't show password
+                emailPribadi: item.emailPribadi || '',
+                noHp: item.noHp || ''
             });
         } else {
             setEditingItem(null);
@@ -79,7 +83,9 @@ export default function AdminManagement() {
                 kelas: '',
                 ket: '',
                 waliKelas: '',
-                password: ''
+                password: '',
+                emailPribadi: '',
+                noHp: ''
             });
         }
         setShowModal(true);
@@ -424,6 +430,28 @@ export default function AdminManagement() {
                                     )}
                                 </div>
                             )}
+
+                            <div>
+                                <label className="block text-sm text-[#5d4037] mb-1">Email Pribadi</label>
+                                <input
+                                    type="email"
+                                    value={formData.emailPribadi}
+                                    onChange={(e) => setFormData({ ...formData, emailPribadi: e.target.value })}
+                                    className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:border-[#5d4037] outline-none text-[#3e2723]"
+                                    placeholder="contoh@gmail.com"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm text-[#5d4037] mb-1">No WhatsApp (WA)</label>
+                                <input
+                                    type="text"
+                                    value={formData.noHp}
+                                    onChange={(e) => setFormData({ ...formData, noHp: e.target.value })}
+                                    className="w-full p-2.5 bg-white border border-[#d7ccc8] rounded-sm focus:border-[#5d4037] outline-none text-[#3e2723]"
+                                    placeholder="08123456789"
+                                />
+                            </div>
 
                             <div>
                                 <label className="block text-sm text-[#5d4037] mb-1">
