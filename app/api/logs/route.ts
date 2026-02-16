@@ -4,6 +4,7 @@ import connectDB from '@/lib/db';
 import Jurnal from '@/models/Jurnal';
 import TanyaJawab from '@/models/TanyaJawab';
 import Siswa from '@/models/Siswa';
+import Aktivitas from '@/models/Aktivitas';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,19 +39,18 @@ export async function GET(req: NextRequest) {
             searchFilter = { nis: { $in: nises } };
         }
 
-        // Hitung Total Dokumen (Agak berat kalau union count, jadi kita estimasi atau count terpisah lalu jumlahkan)
-        // Untuk akurasi, kita count terpisah
+        // Hitung Total Dokumen terpisah
         const countJurnal = await Jurnal.countDocuments(searchFilter);
 
-        const qnaFilter = search ? { nis_siswa: { $in: (searchFilter.nis ? searchFilter.nis['$in'] : []) } } : {};
-        // Perbaiki filter QnA jika search kosong (tampilkan semua)
-        const finalQnaFilter = search ? qnaFilter : {};
-
+        // QnA menggunakan field nis_siswa
+        const finalQnaFilter = search ? { nis_siswa: { $in: (searchFilter.nis ? searchFilter.nis['$in'] : []) } } : {};
         const countQnA = await TanyaJawab.countDocuments(finalQnaFilter);
-        const totalLogs = countJurnal + countQnA;
+        const countAktivitas = await Aktivitas.countDocuments(searchFilter);
 
-        // Aggregation Pipeline untuk Join Limit Offset
-        // Jurnal Collection sebagai base
+        const totalLogs = countJurnal + countQnA + countAktivitas;
+
+        // Aggregation Pipeline
+        // Kita gunakan Jurnal sebagai base, tapi jika kosong union tetap jalan
         const logs = await Jurnal.aggregate([
             { $match: searchFilter },
             { $addFields: { type: 'jurnal', activity: '$tgl_jurnal', date: { $ifNull: ['$updatedAt', '$createdAt'] } } },
@@ -65,22 +65,27 @@ export async function GET(req: NextRequest) {
                     ]
                 }
             },
+            {
+                $unionWith: {
+                    coll: 'aktivitas_logs',
+                    pipeline: [
+                        { $match: searchFilter },
+                        { $addFields: { type: '$tipe', activity: '$aksi', date: '$createdAt' } },
+                        { $project: { nis: 1, type: 1, activity: 1, date: 1 } }
+                    ]
+                }
+            },
             { $sort: { date: -1 } },
             { $skip: skip },
             { $limit: limit }
         ]);
 
-        // Manual Lookup data Siswa untuk setiap log
+        // Manual Lookup data Siswa
         const uniqueNises = Array.from(new Set(logs.map((l: any) => l.nis)));
-        const students = await Siswa.find({ nis: { $in: uniqueNises } }).lean();
-
-        // Map student data ke map untuk akses cepet
+        const studentsList = await Siswa.find({ nis: { $in: uniqueNises } }).lean();
         const studentMap: Record<string, any> = {};
-        students.forEach((s: any) => {
-            studentMap[s.nis] = s;
-        });
+        studentsList.forEach((s: any) => { studentMap[s.nis] = s; });
 
-        // Gabungkan data
         const data = logs.map((log: any) => {
             const student = studentMap[log.nis];
             return {
@@ -88,8 +93,8 @@ export async function GET(req: NextRequest) {
                 nis: log.nis,
                 nama: student ? student.nama : 'Siswa Tidak Dikenal',
                 kelas: student ? student.kelas : '-',
-                hari_ke: log.activity, // Untuk Jurnal = Angka/String Hari, Untuk QnA = Text Pertanyaan
-                type: log.type, // 'jurnal' atau 'qna'
+                hari_ke: log.activity,
+                type: log.type,
                 tanggal_isi: log.date
             };
         });

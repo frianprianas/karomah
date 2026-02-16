@@ -9,6 +9,7 @@ import TeacherDashboardClient from '@/components/TeacherDashboardClient';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FileText, MessageCircle, AlertTriangle } from 'lucide-react';
+import StoriesFloatingButton from '@/components/StoriesFloatingButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -160,6 +161,9 @@ export default async function TeacherDashboard() {
 
                 <TeacherDashboardClient groupedStudents={groupedStudents} />
             </main>
+
+            {/* Floating Action Button untuk Status (Stories) */}
+            <StoriesFloatingButton />
         </div>
     );
 }

@@ -9,6 +9,7 @@ import connectDB from '@/lib/db';
 import Jurnal from '@/models/Jurnal';
 import WelcomeModal from '@/components/WelcomeModal';
 import QnAFloatingButton from '@/components/QnAFloatingButton';
+import StoriesFloatingButton from '@/components/StoriesFloatingButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +30,8 @@ async function getJournalStatus(nis: string) {
     return statusMap;
 }
 
+import Siswa from '@/models/Siswa';
+
 export default async function Dashboard() {
     const session = await getSession();
 
@@ -44,7 +47,17 @@ export default async function Dashboard() {
         redirect('/admin');
     }
 
+    await connectDB();
+    const student = await Siswa.findOne({ nis: (session as any).username }).select('foto status statusUpdatedAt nama kelas nis').lean();
     const journalStatus = await getJournalStatus((session as any).username);
+
+    // Check status expiration (24 hours)
+    let showStatus = false;
+    if (student?.status && student?.statusUpdatedAt) {
+        const diff = new Date().getTime() - new Date(student.statusUpdatedAt).getTime();
+        const hours = diff / (1000 * 3600);
+        if (hours < 24) showStatus = true;
+    }
 
     return (
         <div className="min-h-screen bg-[#fdfbf7] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] pb-20">
@@ -54,14 +67,35 @@ export default async function Dashboard() {
                 {/* Header / Title Page Effect */}
                 <div className="w-full text-center border-b-2 border-double border-[#8d6e63] pb-6 mb-8 mt-4">
                     <div className="flex justify-center mb-4">
-                        <div className="p-1 rounded-full border-2 border-[#8d6e63] shadow-sm">
-                            <Image src="/logo.jpg" alt="Logo" width={80} height={80} className="rounded-full sepia-[.3]" />
+                        <div className="p-1 rounded-full border-2 border-[#8d6e63] shadow-sm overflow-hidden w-[88px] h-[88px]">
+                            {student?.foto ? (
+                                <Image
+                                    src={student.foto}
+                                    alt="Foto Profil"
+                                    width={80}
+                                    height={80}
+                                    className="object-cover w-full h-full"
+                                />
+                            ) : (
+                                <Image src="/logo.jpg" alt="Logo" width={80} height={80} className="rounded-full sepia-[.3]" />
+                            )}
                         </div>
                     </div>
                     <h1 className="text-4xl font-serif font-bold text-[#3e2723] mb-2 tracking-wide">Ahlan Wa Sahlan</h1>
 
                     <div className="mt-4 space-y-1 font-serif">
-                        <p className="text-2xl text-[#5d4037] font-bold">{(session as any).name}</p>
+                        <p className="text-2xl text-[#5d4037] font-bold">{student?.nama || (session as any).name}</p>
+
+                        {/* Status / Motto Display */}
+                        {showStatus && (
+                            <div className="max-w-md mx-auto my-2 px-4">
+                                <p className="text-[#8d6e63] italic text-sm font-serif relative inline-block">
+                                    <span className="text-xl absolute -left-2 -top-1 opacity-40">“</span>
+                                    {student.status}
+                                    <span className="text-xl absolute -right-2 -bottom-2 opacity-40">”</span>
+                                </p>
+                            </div>
+                        )}
                         <div className="flex justify-center gap-4 text-[#795548] text-sm italic">
                             <span>NIS: {(session as any).username}</span>
                             <span>•</span>
@@ -137,6 +171,9 @@ export default async function Dashboard() {
 
             {/* Floating Action Button untuk Tanya Jawab */}
             <QnAFloatingButton />
+
+            {/* Floating Action Button untuk Status (Stories) */}
+            <StoriesFloatingButton />
         </div>
     );
 }

@@ -7,6 +7,11 @@ export interface IGuru extends Document {
     ket: string;
     password: string;
     waliKelas?: string; // Menyimpan nama kelas jika guru ini adalah wali kelas
+    foto?: string;
+    noHp?: string;
+    status?: string;
+    statusUpdatedAt?: Date;
+    emailPribadi?: string;
 }
 
 const GuruSchema: Schema = new Schema({
@@ -15,10 +20,14 @@ const GuruSchema: Schema = new Schema({
     ket: { type: String },
     password: { type: String, required: true },
     waliKelas: { type: String, index: true }, // Optional, hanya diisi jika wali kelas
+    foto: { type: String },
+    noHp: { type: String },
+    status: { type: String },
+    statusUpdatedAt: { type: Date },
+    emailPribadi: { type: String }
 });
 
 // Prevent Mongoose from using a stale cached model in development
-// This is necessary because we added the 'waliKelas' field while the server was running
 if (process.env.NODE_ENV !== 'production' && mongoose.models.Guru) {
     delete mongoose.models.Guru;
 }

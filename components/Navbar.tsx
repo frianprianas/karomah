@@ -43,6 +43,24 @@ export default function Navbar({ user }: { user?: { name: string; role: string; 
                             </div>
                         </div>
 
+                        {/* Stories Link */}
+                        <Link
+                            href="/stories"
+                            className="group flex items-center justify-center p-2 rounded-full border border-[#d7ccc8] hover:bg-[#d7ccc8]/30 transition-all text-[#5d4037]"
+                            aria-label="Status Ramadan"
+                            title="Status (Stories)"
+                        >
+                            <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </Link>
+                        <Link
+                            href="/profile"
+                            className="group flex items-center justify-center p-2 rounded-full border border-[#d7ccc8] hover:bg-[#d7ccc8]/30 transition-all text-[#5d4037]"
+                            aria-label="Profil Saya"
+                            title="Profil Saya"
+                        >
+                            <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </Link>
+
                         {/* Compact Logout */}
                         <button
                             onClick={handleLogout}
