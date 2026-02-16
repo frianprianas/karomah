@@ -35,7 +35,8 @@ export async function POST(req: NextRequest) {
     try {
         await writeFile(path, buffer);
         console.log(`Saved file to ${path}`);
-        return NextResponse.json({ success: true, url: `/uploads/profile/${filename}` });
+        // Gunakan endpoint API baru untuk akses file agar aman di produksi
+        return NextResponse.json({ success: true, url: `/api/uploads/profile/${filename}` });
     } catch (e: any) {
         console.error('File write error:', e);
         return NextResponse.json({ success: false, message: 'Failed to save file: ' + e.message }, { status: 500 });

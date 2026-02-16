@@ -76,7 +76,7 @@ export default function StoriesFloatingButton() {
                             <span className="text-[10px] text-[#fbc02d] uppercase tracking-tighter mb-0.5">Stories Hari Ini..</span>
                             <div className="flex items-center gap-2">
                                 {currentStory.foto && (
-                                    <img src={currentStory.foto} className="w-4 h-4 rounded-full object-cover border border-[#fbc02d]" alt="" />
+                                    <img src={currentStory.foto.startsWith('/uploads/') ? `/api${currentStory.foto}` : currentStory.foto} className="w-4 h-4 rounded-full object-cover border border-[#fbc02d]" alt="" />
                                 )}
                                 <span>{currentStory.name.split(' ')[0]} menambahkan Stories...</span>
                             </div>

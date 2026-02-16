@@ -70,7 +70,7 @@ export default async function Dashboard() {
                         <div className="p-1 rounded-full border-2 border-[#8d6e63] shadow-sm overflow-hidden w-[88px] h-[88px]">
                             {student?.foto ? (
                                 <img
-                                    src={student.foto}
+                                    src={student.foto.startsWith('/uploads/') ? `/api${student.foto}` : student.foto}
                                     alt="Foto Profil"
                                     className="object-cover w-full h-full"
                                 />

@@ -60,7 +60,7 @@ export default function Navbar({ user }: { user?: { name: string; role: string; 
                         >
                             {user.foto ? (
                                 <img
-                                    src={user.foto}
+                                    src={user.foto.startsWith('/uploads/') ? `/api${user.foto}` : user.foto}
                                     alt="Foto Profil"
                                     className="w-full h-full object-cover rounded-full"
                                 />

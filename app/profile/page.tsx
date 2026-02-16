@@ -157,7 +157,7 @@ export default function ProfilePage() {
                                 <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-[#efebe9]">
                                     {previewFoto || fotoUrl ? (
                                         <img
-                                            src={previewFoto || fotoUrl}
+                                            src={(previewFoto || fotoUrl).startsWith('/uploads/') ? `/api${previewFoto || fotoUrl}` : (previewFoto || fotoUrl)}
                                             alt="Foto Profil"
                                             className="object-cover w-full h-full"
                                         />

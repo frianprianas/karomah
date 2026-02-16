@@ -114,7 +114,7 @@ export default async function TeacherDashboard() {
                     <div className="flex justify-center mb-6">
                         <div className="p-1 rounded-full border-2 border-[#8d6e63] shadow-sm w-[94px] h-[94px] overflow-hidden">
                             {teacher?.foto ? (
-                                <img src={teacher.foto} alt="Foto Profil" className="rounded-full object-cover w-full h-full" />
+                                <img src={teacher.foto.startsWith('/uploads/') ? `/api${teacher.foto}` : teacher.foto} alt="Foto Profil" className="rounded-full object-cover w-full h-full" />
                             ) : (
                                 <img src="/logo.jpg" alt="Logo" className="rounded-full sepia-[.3] w-full h-full" />
                             )}
