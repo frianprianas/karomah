@@ -49,7 +49,7 @@ export default function StoriesFloatingButton() {
                 setAllStories(json.data);
             } else {
                 setAllStories([]);
-                setShowBubble(false);
+                setShowBubble(true); // Tampilkan ajakan update meskipun kosong
             }
         } catch (e) {
             console.error("Failed to fetch stories for notification", e);
@@ -85,10 +85,10 @@ export default function StoriesFloatingButton() {
                             </span>
                         </>
                     ) : (
-                        <div className="py-1 flex flex-col items-center gap-0.5">
+                        <div className="py-1 flex flex-col items-center gap-0.5 px-2">
                             <span className="text-[10px] text-[#fbc02d] uppercase tracking-tighter mb-0.5">Stories Hari Ini..</span>
                             <span className="text-[18px] animate-bounce">✨</span>
-                            <span className="text-sm">Ayo update Stories!</span>
+                            <span className="text-sm">Ayo tulis Stories Ramadan mu</span>
                         </div>
                     )}
 

@@ -95,7 +95,7 @@ export default function StoriesList({ user }: { user: any }) {
                         <div className="relative">
                             <div className="w-14 h-14 rounded-full border-2 border-[#8d6e63] overflow-hidden bg-[#efebe9]">
                                 {user?.foto ? (
-                                    <Image src={user.foto} alt="Profile" width={56} height={56} className="object-cover w-full h-full" />
+                                    <img src={user.foto.startsWith('/uploads/') ? `/api${user.foto}` : user.foto} alt="Profile" className="object-cover w-full h-full" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-[#d7ccc8]"><User className="w-8 h-8" /></div>
                                 )}
@@ -131,7 +131,7 @@ export default function StoriesList({ user }: { user: any }) {
                                             <div className="w-16 h-16 rounded-full border-4 border-[#ffab00] p-0.5 bg-white shadow-xl">
                                                 <div className="w-full h-full rounded-full overflow-hidden bg-[#efebe9]">
                                                     {story.foto ? (
-                                                        <Image src={story.foto} alt={story.name} width={64} height={64} className="object-cover w-full h-full" />
+                                                        <img src={story.foto.startsWith('/uploads/') ? `/api${story.foto}` : story.foto} alt={story.name} className="object-cover w-full h-full" />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center text-[#d7ccc8] bg-[#f5f5f5]">
                                                             <User className="w-8 h-8" />
@@ -168,7 +168,7 @@ export default function StoriesList({ user }: { user: any }) {
                                     <div className="flex-shrink-0 mb-3">
                                         <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full border-2 ${isLeft ? 'border-[#8d6e63]' : 'border-[#5d4037]'} overflow-hidden shadow-lg bg-white`}>
                                             {story.foto ? (
-                                                <Image src={story.foto} alt={story.name} width={48} height={48} className="object-cover w-full h-full" />
+                                                <img src={story.foto.startsWith('/uploads/') ? `/api${story.foto}` : story.foto} alt={story.name} className="object-cover w-full h-full" />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-[#d7ccc8] bg-[#f5f5f5]">
                                                     <User className="w-5 h-5 md:w-6 md:h-6" />
@@ -179,8 +179,8 @@ export default function StoriesList({ user }: { user: any }) {
 
                                     {/* Student Chat Bubble */}
                                     <div className={`max-w-[85%] md:max-w-[75%] relative p-5 rounded-[2rem] shadow-lg border-2 ${isLeft
-                                            ? 'bg-white border-[#d1c4e9]/30 rounded-bl-none text-[#3e2723]'
-                                            : 'bg-[#5d4037] border-[#3e2723] rounded-br-none text-[#fdfbf7]'
+                                        ? 'bg-white border-[#d1c4e9]/30 rounded-bl-none text-[#3e2723]'
+                                        : 'bg-[#5d4037] border-[#3e2723] rounded-br-none text-[#fdfbf7]'
                                         }`}>
                                         <div className={`text-[10px] font-bold mb-1 uppercase tracking-tight ${isLeft ? 'text-[#8d6e63]' : 'text-[#d7ccc8]'}`}>
                                             {story.name} <span className="opacity-50 mx-1">•</span> {story.subLabel}
@@ -196,8 +196,8 @@ export default function StoriesList({ user }: { user: any }) {
 
                                         {/* Simple tail using CSS border triangle logic or div - here simplified as a small nudge */}
                                         <div className={`absolute bottom-0 w-4 h-4 ${isLeft
-                                                ? '-left-1 bg-white border-l-2 border-b-2 border-[#d1c4e9]/30 rounded-bl-lg'
-                                                : '-right-1 bg-[#5d4037] border-r-2 border-b-2 border-[#3e2723] rounded-br-lg'
+                                            ? '-left-1 bg-white border-l-2 border-b-2 border-[#d1c4e9]/30 rounded-bl-lg'
+                                            : '-right-1 bg-[#5d4037] border-r-2 border-b-2 border-[#3e2723] rounded-br-lg'
                                             }`} style={{ transform: isLeft ? 'rotate(5deg)' : 'rotate(-5deg)' }}></div>
                                     </div>
                                 </div>

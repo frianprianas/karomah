@@ -54,7 +54,7 @@ export default async function JournalPage({ params }: { params: Promise<{ day: s
 
     return (
         <div className="min-h-screen bg-[#fdfbf7] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] pb-20 font-serif">
-            <Navbar user={session as any} />
+            <Navbar user={{ ...session as any, foto: student?.foto }} />
 
             <main className="max-w-3xl mx-auto p-4 sm:p-6">
                 <Link href="/dashboard" className="inline-flex items-center text-[#8d6e63] mb-6 hover:text-[#3e2723] transition-colors group">
@@ -69,15 +69,13 @@ export default async function JournalPage({ params }: { params: Promise<{ day: s
                     <div className="flex justify-center mb-4">
                         <div className="p-1 rounded-full border-2 border-[#8d6e63] shadow-inner bg-white/20 w-[68px] h-[68px] overflow-hidden">
                             {student?.foto ? (
-                                <Image
-                                    src={student.foto}
+                                <img
+                                    src={student.foto.startsWith('/uploads/') ? `/api${student.foto}` : student.foto}
                                     alt="Foto Profil"
-                                    width={60}
-                                    height={60}
                                     className="object-cover w-full h-full"
                                 />
                             ) : (
-                                <Image src="/logo.jpg" alt="Logo" width={60} height={60} className="rounded-full sepia-[.3]" />
+                                <img src="/logo.jpg" alt="Logo" className="rounded-full sepia-[.3] w-full h-full" />
                             )}
                         </div>
                     </div>
