@@ -11,8 +11,9 @@ export async function middleware(request: NextRequest) {
 
     // 1. Cek apakah user sedang mengakses halaman yang dilindungi
     const isProtected = PROTECTED_ROUTES.some(route => pathname.startsWith(route));
+    const isOTPPage = pathname.startsWith('/auth/verify-otp');
 
-    if (isProtected) {
+    if (isProtected || isOTPPage) {
         const token = request.cookies.get('token')?.value;
 
         // 2. Jika tidak ada token (belum login), tendang ke halaman login
@@ -21,20 +22,29 @@ export async function middleware(request: NextRequest) {
         }
 
         // 3. Verifikasi Token JWT
-        // pastikan token asli dan belum expired (secara internal JWT, 24jam)
         const payload = await verifyToken(token);
 
         if (!payload) {
-            // Token palsu atau sudah expired > 24 jam
             const response = NextResponse.redirect(new URL('/', request.url));
             response.cookies.delete('token');
             return response;
         }
 
-        // 4. SLIDING SESSION (Perpanjang Otomatis)
-        // Setiap kali user aktif (pindah halaman/reload), kita reset timer cookie jadi 30 menit lagi.
-        // Jika user diam > 30 menit, cookie browser otomatis dihapus browser -> Logout.
+        // --- VALIDASI OTP UNTUK ADMIN ---
+        if ((payload as any).otpPending) {
+            // Jika butuh OTP tapi mau masuk ke halaman lain (selain halaman OTP itu sendiri)
+            if (!isOTPPage) {
+                return NextResponse.redirect(new URL('/auth/verify-otp', request.url));
+            }
+        } else {
+            // Jika SUDAH masuk (tidak pending OTP) tapi coba buka halaman OTP lagi
+            if (isOTPPage) {
+                const target = payload.role === 'admin' ? '/admin' : '/dashboard';
+                return NextResponse.redirect(new URL(target, request.url));
+            }
+        }
 
+        // 4. SLIDING SESSION (Perpanjang Otomatis)
         const response = NextResponse.next();
 
         response.cookies.set('token', token, {

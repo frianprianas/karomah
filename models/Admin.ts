@@ -10,6 +10,8 @@ export interface IAdmin extends Document {
     emailPribadi?: string;
     status?: string;
     statusUpdatedAt?: Date;
+    otp?: string;
+    otpExpires?: Date;
 }
 
 const AdminSchema: Schema = new Schema({
@@ -20,7 +22,9 @@ const AdminSchema: Schema = new Schema({
     noHp: { type: String, default: '' },
     emailPribadi: { type: String, default: '' },
     status: { type: String, default: '' },
-    statusUpdatedAt: { type: Date }
+    statusUpdatedAt: { type: Date },
+    otp: { type: String },
+    otpExpires: { type: Date }
 });
 
 const Admin: Model<IAdmin> = mongoose.models.Admin || mongoose.model<IAdmin>('Admin', AdminSchema);

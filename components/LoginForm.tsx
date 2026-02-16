@@ -36,8 +36,13 @@ export default function LoginForm() {
 
             if (!res.ok) throw new Error(data.error || 'Login failed');
 
-            if (role === 'admin') router.push('/admin');
-            else router.push('/dashboard');
+            if (data.needsOTP) {
+                router.push('/auth/verify-otp');
+            } else if (role === 'admin') {
+                router.push('/admin');
+            } else {
+                router.push('/dashboard');
+            }
 
             router.refresh();
         } catch (err: any) {

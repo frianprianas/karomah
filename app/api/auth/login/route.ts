@@ -8,6 +8,7 @@ import { signToken } from '@/lib/auth';
 import { rateLimit } from '@/lib/rate-limit'; // Import
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
+import { sendOTP } from '@/lib/mail';
 
 export async function POST(req: Request) {
     try {
@@ -48,6 +49,52 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
         }
 
+        // --- KHUSUS ADMIN: KIRIM OTP ---
+        if (role === 'admin') {
+            const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+            const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 menit
+
+            await Admin.updateOne({ _id: user._id }, {
+                $set: { otp: otpCode, otpExpires }
+            });
+
+            // Kirim Email
+            const adminEmail = (user as any).emailPribadi;
+            if (!adminEmail) {
+                return NextResponse.json({ error: 'Email admin belum diset pada profil. Silakan hubungi operator.' }, { status: 400 });
+            }
+
+            try {
+                await sendOTP(adminEmail, otpCode);
+            } catch (mailError) {
+                console.error('Mail sending failed:', mailError);
+                return NextResponse.json({ error: 'Gagal mengirim email OTP. Periksa konfigurasi mail server.' }, { status: 500 });
+            }
+
+            // Set temporary OTP pending token
+            const tempToken = await signToken({
+                id: user._id,
+                username: (user as any).username,
+                role: 'admin',
+                otpPending: true
+            });
+
+            const cookieStore = await cookies();
+            cookieStore.set('token', tempToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                maxAge: 60 * 10, // 10 menit
+                path: '/',
+            });
+
+            return NextResponse.json({
+                success: true,
+                needsOTP: true,
+                message: 'OTP telah dikirim ke email Anda. Silakan cek Inbox atau folder SPAM.'
+            });
+        }
+
+        // --- NORMAL LOGIN (SISWA/GURU) ---
         // Create token
         const token = await signToken({
             id: user._id,
