@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { User, Lock, GraduationCap, School, Settings } from 'lucide-react';
+import { User, Lock, GraduationCap, School, Settings, Mail, MessageCircle } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -159,7 +159,7 @@ export default function LoginForm() {
                                                 : "border-[#d7ccc8] text-[#8d6e63] hover:bg-[#efebe9]/50"
                                         )}
                                     >
-                                        <Image src="https://www.google.com/s2/favicons?domain=gmail.com&sz=32" width={14} height={14} alt="Email" className="grayscale opacity-70" />
+                                        <Mail className="w-3.5 h-3.5" />
                                         EMAIL
                                     </button>
                                     <button
@@ -172,7 +172,7 @@ export default function LoginForm() {
                                                 : "border-[#d7ccc8] text-[#8d6e63] hover:bg-[#e8f5e9]/50"
                                         )}
                                     >
-                                        <Image src="https://www.google.com/s2/favicons?domain=whatsapp.com&sz=32" width={14} height={14} alt="WA" className="grayscale opacity-70" />
+                                        <MessageCircle className="w-3.5 h-3.5" />
                                         WHATSAPP
                                     </button>
                                 </div>
