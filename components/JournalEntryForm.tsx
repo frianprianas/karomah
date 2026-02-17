@@ -843,7 +843,7 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
 
                 {/* Jam Tidur */}
                 <section className="space-y-4">
-                    <h3 className="text-xl font-serif font-bold text-[#3e2723] border-b border-[#8d6e63]/30 pb-2">Istirahat</h3>
+                    <h3 className="text-xl font-serif font-bold text-[#3e2723] border-b border-[#8d6e63]/30 pb-2">Tidur</h3>
                     <div>
                         <TimeSelect
                             label="Jam Tidur (Malam)"
