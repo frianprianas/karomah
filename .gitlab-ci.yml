@@ -15,4 +15,4 @@ deploy_job:
     - chmod 700 ~/.ssh
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
   script:
-    - ssh $SERVER_USER@$SERVER_IP "cd $DEPLOY_PATH && bash update.sh"
+    - ssh -p ${SERVER_PORT:-2290} $SERVER_USER@$SERVER_IP "cd $DEPLOY_PATH && bash update.sh"
