@@ -13,25 +13,35 @@ import StoriesFloatingButton from '@/components/StoriesFloatingButton';
 
 export const dynamic = 'force-dynamic';
 
+import { calculatePoints } from '@/lib/gamification';
+
 async function getStudentsWithProgress() {
     await connectDB();
 
     const students = await Siswa.find().sort({ kelas: 1, nama: 1 }).lean();
+    const nisList = students.map(s => s.nis);
 
-    const progressMap = new Map();
-    const progress = await Jurnal.aggregate([
-        { $group: { _id: "$nis", count: { $sum: 1 } } }
-    ]);
+    // Fetch all journals for all students to calculate points
+    const jurnals = await Jurnal.find({ nis: { $in: nisList } }).lean();
 
-    progress.forEach(p => {
-        progressMap.set(p._id, p.count);
+    const statsMap = new Map<string, { count: number, points: number }>();
+
+    jurnals.forEach((j: any) => {
+        const stats = statsMap.get(j.nis) || { count: 0, points: 0 };
+        stats.count += 1;
+        stats.points += calculatePoints(j);
+        statsMap.set(j.nis, stats);
     });
 
-    return students.map(s => ({
-        ...s,
-        _id: s._id.toString(),
-        filledCount: progressMap.get(s.nis) || 0
-    })) as any[];
+    return students.map(s => {
+        const stats = statsMap.get(s.nis) || { count: 0, points: 0 };
+        return {
+            ...s,
+            _id: s._id.toString(),
+            filledCount: stats.count,
+            totalPoints: stats.points
+        };
+    }) as any[];
 }
 
 import Guru from '@/models/Guru';

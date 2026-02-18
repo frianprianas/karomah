@@ -3,13 +3,15 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ChevronRight, Users, GraduationCap, ArrowLeft } from 'lucide-react';
+import { ChevronRight, Users, GraduationCap, ArrowLeft, Star } from 'lucide-react';
+import { getBadge } from '@/lib/gamification';
 
 interface Student {
     nis: string;
     nama: string;
     kelas: string;
     filledCount: number;
+    totalPoints?: number;
 }
 
 interface TeacherDashboardClientProps {
@@ -40,38 +42,66 @@ export default function TeacherDashboardClient({ groupedStudents }: TeacherDashb
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {students.map((student) => (
-                        <Link
-                            href={`/teacher/student/${student.nis}`}
-                            key={student.nis}
-                            className="bg-white p-5 rounded-sm border-2 border-[#d7ccc8] hover:border-[#8d6e63] shadow-sm hover:shadow-md transition-all group relative flex flex-col justify-between"
-                        >
-                            {/* Decorative internal border */}
-                            <div className="absolute inset-1 border border-dashed border-[#8d6e63] opacity-10 pointer-events-none"></div>
+                    {students.map((student) => {
+                        const badge = getBadge(student.totalPoints || 0);
+                        return (
+                            <Link
+                                href={`/teacher/student/${student.nis}`}
+                                key={student.nis}
+                                className="bg-white p-5 rounded-sm border-2 border-[#d7ccc8] hover:border-[#8d6e63] shadow-sm hover:shadow-md transition-all group relative flex flex-col justify-between overflow-hidden"
+                            >
+                                {/* Badge background decoration */}
+                                <div
+                                    className="absolute -top-6 -right-6 w-16 h-16 rounded-full opacity-10 rotate-12 transition-transform group-hover:scale-110"
+                                    style={{ backgroundColor: badge.color }}
+                                ></div>
 
-                            <div className="mb-4">
-                                <span className="text-[10px] font-mono text-[#a1887f] bg-[#efebe9] px-2 py-0.5 rounded-sm block w-fit mb-2">
-                                    NIS: {student.nis}
-                                </span>
-                                <h3 className="font-serif font-bold text-[#3e2723] group-hover:text-[#5d4037] text-lg leading-tight">
-                                    {student.nama}
-                                </h3>
-                            </div>
+                                {/* Decorative internal border */}
+                                <div className="absolute inset-1 border border-dashed border-[#8d6e63] opacity-10 pointer-events-none"></div>
 
-                            <div className="space-y-2">
-                                <div className="w-full bg-[#efebe9] rounded-full h-1.5 overflow-hidden">
-                                    <div
-                                        className="bg-[#5d4037] h-full rounded-full transition-all duration-700"
-                                        style={{ width: `${(student.filledCount / 30) * 100}%` }}
-                                    ></div>
+                                <div className="mb-4 relative z-10">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <span className="text-[10px] font-mono text-[#a1887f] bg-[#efebe9] px-2 py-0.5 rounded-sm">
+                                            NIS: {student.nis}
+                                        </span>
+                                        <div
+                                            className="px-2 py-0.5 rounded-full text-[9px] font-bold border flex items-center gap-1 shadow-sm"
+                                            style={{ borderColor: badge.color, color: badge.color, backgroundColor: badge.bgColor }}
+                                        >
+                                            <span className="text-[10px]">{badge.icon}</span>
+                                            {badge.name}
+                                        </div>
+                                    </div>
+                                    <h3 className="font-serif font-bold text-[#3e2723] group-hover:text-[#5d4037] text-lg leading-tight">
+                                        {student.nama}
+                                    </h3>
                                 </div>
-                                <div className="flex justify-between text-xs font-serif text-[#795548]">
-                                    <span>Progress Jurnal</span>
-                                    <span className="font-bold">{student.filledCount} / 30 Hari</span>
+
+                                <div className="space-y-3 relative z-10">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-1">
+                                            <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                                            <span className="text-xs font-bold text-[#5d4037]">{student.totalPoints?.toLocaleString() || 0} Poin</span>
+                                        </div>
+                                        <div className="text-[10px] text-[#8d6e63] font-bold uppercase tracking-tighter">Level: {badge.level}</div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <div className="w-full bg-[#efebe9] rounded-full h-1.5 overflow-hidden">
+                                            <div
+                                                className="bg-[#5d4037] h-full rounded-full transition-all duration-700"
+                                                style={{ width: `${(student.filledCount / 30) * 100}%` }}
+                                            ></div>
+                                        </div>
+                                        <div className="flex justify-between text-[10px] font-serif text-[#795548]">
+                                            <span>Progress Ramadan</span>
+                                            <span className="font-bold">{student.filledCount} / 30 Hari</span>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </Link>
-                    ))}
+                            </Link>
+                        );
+                    })}
                 </div>
             </div>
         );

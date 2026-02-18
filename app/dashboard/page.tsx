@@ -10,16 +10,21 @@ import Jurnal from '@/models/Jurnal';
 import WelcomeModal from '@/components/WelcomeModal';
 import QnAFloatingButton from '@/components/QnAFloatingButton';
 import StoriesFloatingButton from '@/components/StoriesFloatingButton';
+import { calculatePoints, getBadge } from '@/lib/gamification';
 
 export const dynamic = 'force-dynamic';
 
 async function getJournalStatus(nis: string) {
     await connectDB();
-    const journals = await Jurnal.find({ nis }).select('tgl_jurnal jam_tidur');
+    const journals = await Jurnal.find({ nis });
 
+    let totalPoints = 0;
     const statusMap = new Map<number, 'full' | 'partial'>();
 
-    journals.forEach((j: { tgl_jurnal: number; jam_tidur?: string }) => {
+    journals.forEach((j: any) => {
+        // Calculate points
+        totalPoints += calculatePoints(j);
+
         if (j.jam_tidur && j.jam_tidur.trim().length > 0) {
             statusMap.set(j.tgl_jurnal, 'full');
         } else {
@@ -27,7 +32,7 @@ async function getJournalStatus(nis: string) {
         }
     });
 
-    return statusMap;
+    return { statusMap, totalPoints };
 }
 
 import Siswa from '@/models/Siswa';
@@ -49,7 +54,9 @@ export default async function Dashboard() {
 
     await connectDB();
     const student = await Siswa.findOne({ nis: (session as any).username }).select('foto status statusUpdatedAt nama kelas nis').lean();
-    const journalStatus = await getJournalStatus((session as any).username);
+    const { statusMap, totalPoints } = await getJournalStatus((session as any).username);
+    const journalStatus = statusMap;
+    const badge = getBadge(totalPoints);
 
     // Check status expiration (24 hours)
     let showStatus = false;
@@ -64,10 +71,33 @@ export default async function Dashboard() {
             <Navbar user={{ ...session as any, foto: student?.foto }} />
 
             <main className="max-w-4xl mx-auto p-6 flex flex-col items-center">
+                {/* Points & Badge Display */}
+                <div className="w-full flex justify-end mb-4 animate-in fade-in slide-in-from-top-4 duration-700">
+                    <div className="flex items-center gap-3 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-2xl border border-[#d7ccc8] shadow-sm">
+                        <div className="flex flex-col items-end">
+                            <span className="text-[10px] font-bold text-[#8d6e63] uppercase tracking-wider">Total Poin</span>
+                            <span className="text-sm font-bold text-[#3e2723]">{totalPoints.toLocaleString()}</span>
+                        </div>
+                        <div className="w-[1px] h-8 bg-[#d7ccc8]"></div>
+                        <div className="flex items-center gap-2">
+                            <div
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-inner"
+                                style={{ backgroundColor: badge.bgColor }}
+                            >
+                                {badge.icon}
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold text-[#8d6e63] uppercase tracking-wider">Pangkat</span>
+                                <span className="text-xs font-bold" style={{ color: badge.color }}>{badge.name}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Header / Title Page Effect */}
                 <div className="w-full text-center border-b-2 border-double border-[#8d6e63] pb-6 mb-8 mt-4">
                     <div className="flex justify-center mb-4">
-                        <div className="p-1 rounded-full border-2 border-[#8d6e63] shadow-sm overflow-hidden w-[88px] h-[88px]">
+                        <div className="p-1 rounded-full border-2 border-[#8d6e63] shadow-sm overflow-hidden w-[88px] h-[88px] relative group">
                             {student?.foto ? (
                                 <img
                                     src={student.foto.startsWith('/uploads/') ? `/api${student.foto}` : student.foto}
@@ -77,6 +107,15 @@ export default async function Dashboard() {
                             ) : (
                                 <img src="/logo.jpg" alt="Logo" className="rounded-full sepia-[.3] w-20 h-20" />
                             )}
+
+                            {/* Overlay Badge icon on profile */}
+                            <div
+                                className="absolute bottom-0 right-0 w-6 h-6 rounded-full border border-white flex items-center justify-center text-[10px] shadow-md"
+                                style={{ backgroundColor: badge.bgColor }}
+                                title={`${badge.name} (${badge.level})`}
+                            >
+                                {badge.icon}
+                            </div>
                         </div>
                     </div>
                     <h1 className="text-4xl font-serif font-bold text-[#3e2723] mb-2 tracking-wide">Ahlan Wa Sahlan</h1>
