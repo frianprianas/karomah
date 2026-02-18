@@ -109,7 +109,7 @@ export default function AdminWaManagement() {
                                         value={greet}
                                         onChange={(e) => updateGreeting(idx, e.target.value)}
                                         placeholder="Contoh: Assalamualaikum..."
-                                        className="w-full pl-10 pr-4 py-3 bg-[#fdfbf7] border-2 border-[#d7ccc8] rounded-lg focus:border-[#5d4037] outline-none transition-colors text-sm font-serif italic"
+                                        className="w-full pl-10 pr-4 py-3 bg-[#fdfbf7] border-2 border-[#d7ccc8] rounded-lg focus:border-[#5d4037] outline-none transition-colors text-sm font-serif italic text-[#3e2723]"
                                     />
                                 </div>
                             ))}
@@ -127,7 +127,7 @@ export default function AdminWaManagement() {
                             value={settings.messageTemplate}
                             onChange={(e) => setSettings({ ...settings, messageTemplate: e.target.value })}
                             rows={6}
-                            className="w-full p-4 bg-[#fdfbf7] border-2 border-[#d7ccc8] rounded-lg focus:border-[#5d4037] outline-none transition-colors text-sm font-serif"
+                            className="w-full p-4 bg-[#fdfbf7] border-2 border-[#d7ccc8] rounded-lg focus:border-[#5d4037] outline-none transition-colors text-sm font-serif text-[#3e2723]"
                             placeholder="Tulis template pesan di sini..."
                         />
                         <div className="mt-2 flex flex-wrap gap-2">
