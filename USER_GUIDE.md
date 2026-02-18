@@ -28,6 +28,16 @@ Fitur ini memungkinkan Anda menambahkan guru dan mengatur tugas mereka (apakah s
 3.  **Edit Guru**:
     *   Klik ikon **Pensil** pada daftar guru untuk mengubah data, jabatan, atau kelas binaan.
 
+### Laporan Otomatis WhatsApp (Wali Kelas)
+Fitur ini mengirimkan progres harian kelas secara otomatis ke nomor WhatsApp Wali Kelas.
+1.  **Akses Menu**: Masuk ke Dashboard Admin -> Bagian **Laporan Otomatis WhatsApp**.
+2.  **Konfigurasi**:
+    *   **On/Off**: Saklar untuk mengaktifkan atau menonaktifkan pengiriman harian.
+    *   **Greeting**: Terdapat 4 variasi salam pembuka agar tidak terdeteksi sebagai bot.
+    *   **Isi Pesan**: Template pesan yang bisa disesuaikan menggunakan tag `[KELAS]`, `[HARI]`, `[ISI]`, `[KOSONG]`, dan `[PERSEN]`.
+3.  **Jadwal**: Pesan dikirim otomatis antara jam **18:30 - 21:30 WIB** dengan jeda acak 10-30 menit.
+4.  **Aktivasi Server**: Pastikan script background `wa_auto_report.js` dijalankan di server menggunakan `node scripts/wa_auto_report.js`.
+
 ---
 
 ## 2. Panduan untuk Guru

@@ -32,3 +32,33 @@ export async function sendWhatsAppOTP(target: string, otp: string) {
         throw error;
     }
 }
+
+export async function sendWhatsAppMessage(target: string, message: string) {
+    const token = 'KQ1XKbd2ZHue4cn9e7hc';
+
+    let formattedTarget = target.trim();
+    if (formattedTarget.startsWith('0')) {
+        formattedTarget = '62' + formattedTarget.substring(1);
+    }
+    formattedTarget = formattedTarget.replace(/\D/g, '');
+
+    try {
+        const response = await fetch('https://api.fonnte.com/send', {
+            method: 'POST',
+            headers: {
+                'Authorization': token
+            },
+            body: new URLSearchParams({
+                'target': formattedTarget,
+                'message': message,
+                'countryCode': '62'
+            })
+        });
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('WhatsApp sending error:', error);
+        throw error;
+    }
+}

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import AdminManagement from '@/components/AdminManagement';
 import AdminStoriesManagement from '@/components/AdminStoriesManagement';
+import AdminWaManagement from '@/components/AdminWaManagement';
 import Image from 'next/image';
 
 import Link from 'next/link';
@@ -45,6 +46,9 @@ export default async function AdminDashboard() {
                 </div>
 
                 <AdminManagement />
+
+                {/* WhatsApp Auto-Report Management */}
+                <AdminWaManagement />
 
                 {/* Moderasi Stories */}
                 <AdminStoriesManagement />
