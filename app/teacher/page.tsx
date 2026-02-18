@@ -138,6 +138,17 @@ export default async function TeacherDashboard() {
                         <span className="relative z-10 text-sm whitespace-nowrap">Log Aktifitas Siswa</span>
                     </Link>
 
+                    <Link
+                        href="/teacher/stats"
+                        className="flex-1 flex justify-center items-center gap-2 px-6 py-3 bg-emerald-700 text-white rounded-full font-serif font-bold shadow-lg hover:bg-emerald-800 hover:shadow-xl transition-all hover:-translate-y-1 active:scale-95 border-2 border-emerald-900 group relative overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                        <svg className="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m0 0a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        <span className="relative z-10 text-sm whitespace-nowrap">Statistik Monitoring</span>
+                    </Link>
+
                     {/* Hanya Guru PAI atau Guru Keduanya (Wali Kelas & Guru PAI) yang bisa melihat Tanya Jawab */}
                     {teacher && (teacher.ket === 'Guru PAI' || teacher.ket === 'Keduanya') && (
                         <Link
