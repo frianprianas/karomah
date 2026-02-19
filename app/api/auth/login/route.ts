@@ -90,7 +90,7 @@ export async function POST(req: Request) {
             const tempToken = await signToken({
                 id: user._id.toString(),
                 username: (user as any).username,
-                role: 'admin',
+                role: (user as any).role || 'admin',
                 otpPending: true
             });
 
@@ -115,8 +115,9 @@ export async function POST(req: Request) {
         // Create token
         const token = await signToken({
             id: user._id.toString(),
+            // For admin, check if user.role exists (admin/spv), fallback to 'admin'
+            role: role === 'admin' ? ((user as any).role || 'admin') : userRole,
             username: role === 'siswa' ? (user as any).nis : (role === 'guru' ? (user as any).nipy : (user as any).username),
-            role: userRole,
             name: user.nama,
             kelas: role === 'siswa' ? (user as any).kelas : null,
             waliKelas: role === 'guru' ? (user as any).waliKelas : null
@@ -134,7 +135,7 @@ export async function POST(req: Request) {
             success: true,
             user: {
                 name: user.nama,
-                role: userRole,
+                role: role === 'admin' ? ((user as any).role || 'admin') : userRole,
                 waliKelas: role === 'guru' ? (user as any).waliKelas : undefined
             }
         });

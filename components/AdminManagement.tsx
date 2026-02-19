@@ -1,16 +1,17 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { UserPlus, Edit, Trash2, X, Save, GraduationCap, School, Search, ImageOff, User } from 'lucide-react';
 
-export default function AdminManagement() {
+export default function AdminManagement({ userRole }: { userRole?: string }) {
     const [activeTab, setActiveTab] = useState<'siswa' | 'guru'>('siswa');
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingItem, setEditingItem] = useState<any>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const [formData, setFormData] = useState({
         nis: '',
@@ -24,11 +25,12 @@ export default function AdminManagement() {
         noHp: ''
     });
 
+    const [classList, setClassList] = useState<string[]>([]);
+
     useEffect(() => {
         fetchData();
+        setCurrentPage(1); // Reset page when tab changes
     }, [activeTab]);
-
-    const [classList, setClassList] = useState<string[]>([]);
 
     // Fetch classes specifically for suggestions
     useEffect(() => {
@@ -151,14 +153,6 @@ export default function AdminManagement() {
         (item.nis || item.nipy)?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // Pagination Logic
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 15;
-
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [activeTab, searchTerm]);
-
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentData = filteredData.slice(indexOfFirstItem, indexOfLastItem);
@@ -201,13 +195,15 @@ export default function AdminManagement() {
                         className="w-full pl-10 pr-4 py-2 bg-white border border-[#d7ccc8] rounded-sm focus:border-[#5d4037] outline-none font-serif text-sm text-[#3e2723]"
                     />
                 </div>
-                <button
-                    onClick={() => handleOpenModal()}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#5d4037] text-[#f0e6d2] px-6 py-2 rounded-sm border-b-4 border-[#3e2723] active:border-b-0 hover:bg-[#4e342e] transition-all font-serif"
-                >
-                    <UserPlus className="w-4 h-4" />
-                    Tambah {activeTab === 'siswa' ? 'Siswa' : 'Guru'} baru
-                </button>
+                {userRole !== 'spv' && (
+                    <button
+                        onClick={() => handleOpenModal()}
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#5d4037] text-[#f0e6d2] px-6 py-2 rounded-sm border-b-4 border-[#3e2723] active:border-b-0 hover:bg-[#4e342e] transition-all font-serif"
+                    >
+                        <UserPlus className="w-4 h-4" />
+                        Tambah {activeTab === 'siswa' ? 'Siswa' : 'Guru'} baru
+                    </button>
+                )}
             </div>
 
             {/* Data Table */}
@@ -220,14 +216,16 @@ export default function AdminManagement() {
                                 <th className="p-4 border-b border-[#3e2723]">{activeTab === 'siswa' ? 'NIS' : 'NIPY'}</th>
                                 <th className="p-4 border-b border-[#3e2723]">Nama</th>
                                 <th className="p-4 border-b border-[#3e2723]">{activeTab === 'siswa' ? 'Kelas' : 'Detail'}</th>
-                                <th className="p-4 border-b border-[#3e2723] text-center w-32">Aksi</th>
+                                {userRole !== 'spv' && (
+                                    <th className="p-4 border-b border-[#3e2723] text-center w-32">Aksi</th>
+                                )}
                             </tr>
                         </thead>
                         <tbody className="text-[#3e2723]">
                             {loading ? (
-                                <tr><td colSpan={4} className="p-10 text-center italic">Membuka lembaran data...</td></tr>
+                                <tr><td colSpan={userRole !== 'spv' ? 5 : 4} className="p-10 text-center italic">Membuka lembaran data...</td></tr>
                             ) : currentData.length === 0 ? (
-                                <tr><td colSpan={4} className="p-10 text-center italic text-[#795548]">Belum ada data yang tertulis.</td></tr>
+                                <tr><td colSpan={userRole !== 'spv' ? 5 : 4} className="p-10 text-center italic text-[#795548]">Belum ada data yang tertulis.</td></tr>
                             ) : (
                                 currentData.map((item) => (
                                     <tr key={item._id} className="hover:bg-[#d7ccc8]/30 transition-colors border-b border-[#d7ccc8]/50">
@@ -263,33 +261,35 @@ export default function AdminManagement() {
                                                 )
                                             }
                                         </td>
-                                        <td className="p-4">
-                                            <div className="flex justify-center gap-2">
-                                                {item.foto && (
+                                        {userRole !== 'spv' && (
+                                            <td className="p-4">
+                                                <div className="flex justify-center gap-2">
+                                                    {item.foto && (
+                                                        <button
+                                                            onClick={() => handleDeletePhoto(item._id, activeTab)}
+                                                            className="p-2 text-orange-600 hover:bg-orange-600 hover:text-white rounded-sm transition-all"
+                                                            title="Hapus Foto Profil"
+                                                        >
+                                                            <ImageOff className="w-4 h-4" />
+                                                        </button>
+                                                    )}
                                                     <button
-                                                        onClick={() => handleDeletePhoto(item._id, activeTab)}
-                                                        className="p-2 text-orange-600 hover:bg-orange-600 hover:text-white rounded-sm transition-all"
-                                                        title="Hapus Foto Profil"
+                                                        onClick={() => handleOpenModal(item)}
+                                                        className="p-2 text-[#5d4037] hover:bg-[#5d4037] hover:text-white rounded-sm transition-all"
+                                                        title="Edit"
                                                     >
-                                                        <ImageOff className="w-4 h-4" />
+                                                        <Edit className="w-4 h-4" />
                                                     </button>
-                                                )}
-                                                <button
-                                                    onClick={() => handleOpenModal(item)}
-                                                    className="p-2 text-[#5d4037] hover:bg-[#5d4037] hover:text-white rounded-sm transition-all"
-                                                    title="Edit"
-                                                >
-                                                    <Edit className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(item._id)}
-                                                    className="p-2 text-red-700 hover:bg-red-700 hover:text-white rounded-sm transition-all"
-                                                    title="Hapus"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
+                                                    <button
+                                                        onClick={() => handleDelete(item._id)}
+                                                        className="p-2 text-red-700 hover:bg-red-700 hover:text-white rounded-sm transition-all"
+                                                        title="Hapus"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        )}
                                     </tr>
                                 ))
                             )}

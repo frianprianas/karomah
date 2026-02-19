@@ -13,7 +13,7 @@ import { FileText } from 'lucide-react';
 export default async function AdminDashboard() {
     const session = await getSession();
 
-    if (!session || session.role !== 'admin') {
+    if (!session || (session.role !== 'admin' && session.role !== 'spv')) {
         redirect('/');
     }
 
@@ -32,6 +32,11 @@ export default async function AdminDashboard() {
                     <h1 className="text-4xl font-bold text-[#3e2723] mb-2">Manuskrip Administrasi</h1>
                     <p className="text-[#5d4037] italic">Pengelolaan Data Santri & Pengajar Karomah</p>
                     <p className="text-[#8d6e63] text-xs mt-2 uppercase tracking-[0.3em] font-bold">SMK Bakti Nusantara 666</p>
+                    {session.role === 'spv' && (
+                        <div className="mt-2 inline-block bg-amber-100 px-3 py-1 rounded-full border border-amber-300">
+                            <span className="text-amber-800 text-xs font-bold font-mono">Supervisor (Read-Only)</span>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex justify-center mb-10 w-full animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
@@ -45,7 +50,7 @@ export default async function AdminDashboard() {
                     </Link>
                 </div>
 
-                <AdminManagement />
+                <AdminManagement userRole={session.role} />
 
                 {/* WhatsApp Auto-Report Management */}
                 <AdminWaManagement />

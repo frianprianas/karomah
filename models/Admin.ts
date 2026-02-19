@@ -12,6 +12,7 @@ export interface IAdmin extends Document {
     statusUpdatedAt?: Date;
     otp?: string;
     otpExpires?: Date;
+    role?: 'admin' | 'spv';
 }
 
 const AdminSchema: Schema = new Schema({
@@ -24,7 +25,8 @@ const AdminSchema: Schema = new Schema({
     status: { type: String, default: '' },
     statusUpdatedAt: { type: Date },
     otp: { type: String },
-    otpExpires: { type: Date }
+    otpExpires: { type: Date },
+    role: { type: String, enum: ['admin', 'spv'], default: 'admin' }
 });
 
 const Admin: Model<IAdmin> = mongoose.models.Admin || mongoose.model<IAdmin>('Admin', AdminSchema);

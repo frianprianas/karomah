@@ -4,6 +4,9 @@ import connectDB from '@/lib/db';
 import TanyaJawab from '@/models/TanyaJawab';
 import { getSession } from '@/lib/auth';
 
+import Guru from '@/models/Guru';
+import { sendWhatsAppMessage } from '@/lib/whatsapp';
+
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
@@ -53,6 +56,18 @@ export async function POST(req: Request) {
             pertanyaan,
             status: 'menunggu'
         });
+
+        // NOTIFIKASI WA KE GURU
+        try {
+            const guru = await Guru.findOne({ nipy: id_guru });
+            if (guru && guru.noHp) {
+                const message = `*Assalamu'alaikum ${guru.nama}*,\n\nAda pertanyaan baru di fitur Tanya Jawab (QnA) Karomah:\n\n🧑‍🎓 *Siswa*: ${session.name} (${session.kelas || '-'}) \n❓ *Pertanyaan*: "${pertanyaan}"\n\nSilakan buka aplikasi Karomah untuk menjawab. Terima kasih.`;
+                await sendWhatsAppMessage(guru.noHp, message);
+            }
+        } catch (waError) {
+            console.error('Gagal kirim notif WA QnA:', waError);
+            // Jangan gagalkan request utama hanya karena WA gagal
+        }
 
         return NextResponse.json({ success: true, data: newQ });
     } catch (error) {
