@@ -139,7 +139,9 @@ export default function LoginForm() {
                                     {r === 'siswa' && <GraduationCap className="w-4 h-4" />}
                                     {r === 'guru' && <School className="w-4 h-4" />}
                                     {r === 'admin' && <Settings className="w-4 h-4" />}
-                                    <span className="mt-0.5 md:mt-0">{r}</span>
+                                    <span className="mt-0.5 md:mt-0">
+                                        {r === 'admin' ? 'Admin / SPV' : r}
+                                    </span>
                                 </button>
                             ))}
                         </div>
@@ -195,7 +197,7 @@ export default function LoginForm() {
                                     value={id}
                                     onChange={(e) => setId(e.target.value)}
                                     className="w-full pl-12 pr-4 py-3.5 bg-white border border-[#d7ccc8] rounded-xl focus:border-[#5d4037] focus:ring-4 focus:ring-[#8d6e63]/10 outline-none font-serif text-[#3e2723] placeholder-[#bcaaa4] transition-all text-sm font-medium"
-                                    placeholder={role === 'siswa' ? 'Nomor Induk Siswa' : (role === 'guru' ? 'NIPY Guru' : 'Username Admin')}
+                                    placeholder={role === 'siswa' ? 'Nomor Induk Siswa' : (role === 'guru' ? 'NIPY Guru' : 'Username Admin / SPV')}
                                     required
                                 />
                             </div>
