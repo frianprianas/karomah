@@ -3,10 +3,11 @@ import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import AdminManagement from '@/components/AdminManagement';
-import AdminStoriesManagement from '@/components/AdminStoriesManagement';
 import AdminWaManagement from '@/components/AdminWaManagement';
 import AdminSpvManagement from '@/components/AdminSpvManagement';
-import { FileText, ArrowLeft } from 'lucide-react';
+import AdminStoriesManagement from '@/components/AdminStoriesManagement';
+import AdminMonitoring from '@/components/AdminMonitoring';
+import { FileText, ArrowLeft, History, Users, Database } from 'lucide-react';
 import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
@@ -40,17 +41,44 @@ export default async function AdminDashboard() {
                     )}
                 </div>
 
-                <div className="flex justify-center mb-10 w-full animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-                    <Link
-                        href="/admin/logs"
-                        className="flex items-center gap-2 px-8 py-3 bg-[#5d4037] text-[#fdfbf7] rounded-full font-serif font-bold shadow-lg hover:bg-[#3e2723] hover:shadow-xl transition-all hover:-translate-y-1 active:scale-95 border-2 border-[#8d6e63] group relative overflow-hidden"
-                    >
-                        <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                        <FileText className="w-5 h-5 relative z-10" />
-                        <span className="relative z-10">Pantau Log Aktifitas Siswa</span>
+                {/* --- NEW: Monitoring Section (Statistik & Jurnal) --- */}
+                <AdminMonitoring role={session.role} />
+
+                {/* --- Menu Cards --- */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 w-full mt-10 mb-10">
+                    {/* Card 1: Log Aktivitas */}
+                    <Link href="/admin/logs" className="group relative overflow-hidden bg-white p-6 rounded-xl border border-[#d7ccc8] shadow-sm hover:shadow-lg transition-all duration-300">
+                        <div className="absolute inset-0 bg-[#5d4037]/5 translate-y-full group-hover:translate-y-0 transition-transform duration-500 rounded-xl"></div>
+                        <div className="relative z-10 flex items-center gap-4">
+                            <div className="p-3 bg-[#efebe9] text-[#5d4037] rounded-full group-hover:bg-[#5d4037] group-hover:text-white transition-colors">
+                                <History className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-[#3e2723]">Log Aktifitas Siswa</h3>
+                                <p className="text-xs text-[#8d6e63] italic group-hover:text-[#5d4037] transition-colors">
+                                    Pantau pengisian jurnal, QnA, dan update status secara realtime.
+                                </p>
+                            </div>
+                        </div>
                     </Link>
+
+                    {/* Card 2: Kelola Data Master (Only Admin, but maybe SPV can view?) - Let's stick to management component logic */}
+                    <div className="group relative overflow-hidden bg-white p-6 rounded-xl border border-[#d7ccc8] shadow-sm">
+                        <div className="flex items-center gap-4 opacity-70">
+                            <div className="p-3 bg-[#efebe9] text-[#5d4037] rounded-full">
+                                <Database className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-[#3e2723]">Data Master</h3>
+                                <p className="text-xs text-[#8d6e63] italic">
+                                    Pengelolaan data Siswa dan Guru ada di tabel bawah.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
+                {/* Existing Management Components */}
                 <AdminManagement userRole={session.role} />
 
                 {/* WhatsApp Auto-Report Management: Visible to Admin & SPV (Read-Only for SPV handled in component) */}
