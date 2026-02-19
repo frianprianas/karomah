@@ -1,14 +1,15 @@
-
+import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import AdminManagement from '@/components/AdminManagement';
 import AdminStoriesManagement from '@/components/AdminStoriesManagement';
 import AdminWaManagement from '@/components/AdminWaManagement';
+import AdminSpvManagement from '@/components/AdminSpvManagement';
+import { FileText, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 
-import Link from 'next/link';
-import { FileText } from 'lucide-react';
+export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboard() {
     const session = await getSession();
@@ -52,8 +53,11 @@ export default async function AdminDashboard() {
 
                 <AdminManagement userRole={session.role} />
 
-                {/* WhatsApp Auto-Report Management */}
-                <AdminWaManagement />
+                {/* WhatsApp Auto-Report Management: Visible to Admin & SPV (Read-Only for SPV handled in component) */}
+                <AdminWaManagement userRole={session.role} />
+
+                {/* SPV Management: ONLY Visible to Super Admin */}
+                {session.role === 'admin' && <AdminSpvManagement />}
 
                 {/* Moderasi Stories */}
                 <AdminStoriesManagement />

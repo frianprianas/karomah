@@ -2,9 +2,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MessageSquare, Save, Power, Plus, Trash2 } from 'lucide-react';
+import { MessageSquare, Save } from 'lucide-react';
 
-export default function AdminWaManagement() {
+export default function AdminWaManagement({ userRole }: { userRole?: string }) {
     const [settings, setSettings] = useState({
         enabled: false,
         greetings: ["", "", "", ""],
@@ -12,6 +12,8 @@ export default function AdminWaManagement() {
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+
+    const isReadOnly = userRole === 'spv';
 
     useEffect(() => {
         fetchSettings();
@@ -32,6 +34,7 @@ export default function AdminWaManagement() {
     };
 
     const handleSave = async () => {
+        if (isReadOnly) return;
         setSaving(true);
         try {
             const res = await fetch('/api/admin/wa-settings', {
@@ -50,6 +53,7 @@ export default function AdminWaManagement() {
     };
 
     const updateGreeting = (index: number, val: string) => {
+        if (isReadOnly) return;
         const newGreetings = [...settings.greetings];
         newGreetings[index] = val;
         setSettings({ ...settings, greetings: newGreetings });
@@ -69,12 +73,12 @@ export default function AdminWaManagement() {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl border-2 border-[#d7ccc8] shadow-sm overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')]">
+            <div className={`bg-white rounded-xl border-2 border-[#d7ccc8] shadow-sm overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] ${isReadOnly ? 'opacity-80 pointer-events-none' : ''}`}>
                 <div className="p-6 border-b border-[#d7ccc8] flex items-center justify-between bg-[#efebe9]/30">
                     <div className="flex items-center gap-4">
                         <div
-                            onClick={() => setSettings({ ...settings, enabled: !settings.enabled })}
-                            className={`w-14 h-7 rounded-full relative cursor-pointer transition-colors duration-300 ${settings.enabled ? 'bg-emerald-600' : 'bg-gray-300'}`}
+                            onClick={() => !isReadOnly && setSettings({ ...settings, enabled: !settings.enabled })}
+                            className={`w-14 h-7 rounded-full relative cursor-pointer transition-colors duration-300 ${settings.enabled ? 'bg-emerald-600' : 'bg-gray-300'} ${isReadOnly ? 'cursor-not-allowed' : ''}`}
                         >
                             <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all duration-300 ${settings.enabled ? 'left-8' : 'left-1'}`}></div>
                         </div>
@@ -83,14 +87,16 @@ export default function AdminWaManagement() {
                         </span>
                     </div>
 
-                    <button
-                        onClick={handleSave}
-                        disabled={saving}
-                        className="flex items-center gap-2 px-6 py-2 bg-[#5d4037] text-white rounded-full text-sm font-bold hover:bg-[#3e2723] transition-all disabled:opacity-50"
-                    >
-                        <Save className="w-4 h-4" />
-                        {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
-                    </button>
+                    {!isReadOnly && (
+                        <button
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="flex items-center gap-2 px-6 py-2 bg-[#5d4037] text-white rounded-full text-sm font-bold hover:bg-[#3e2723] transition-all disabled:opacity-50"
+                        >
+                            <Save className="w-4 h-4" />
+                            {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
+                        </button>
+                    )}
                 </div>
 
                 <div className="p-6 space-y-6">
@@ -106,10 +112,11 @@ export default function AdminWaManagement() {
                                     </span>
                                     <input
                                         type="text"
+                                        disabled={isReadOnly}
                                         value={greet}
                                         onChange={(e) => updateGreeting(idx, e.target.value)}
                                         placeholder="Contoh: Assalamualaikum..."
-                                        className="w-full pl-10 pr-4 py-3 bg-[#fdfbf7] border-2 border-[#d7ccc8] rounded-lg focus:border-[#5d4037] outline-none transition-colors text-sm font-serif italic text-[#3e2723]"
+                                        className="w-full pl-10 pr-4 py-3 bg-[#fdfbf7] border-2 border-[#d7ccc8] rounded-lg focus:border-[#5d4037] outline-none transition-colors text-sm font-serif italic text-[#3e2723] disabled:text-gray-500"
                                     />
                                 </div>
                             ))}
@@ -124,10 +131,11 @@ export default function AdminWaManagement() {
                             Template Isi Pesan
                         </label>
                         <textarea
+                            disabled={isReadOnly}
                             value={settings.messageTemplate}
                             onChange={(e) => setSettings({ ...settings, messageTemplate: e.target.value })}
                             rows={6}
-                            className="w-full p-4 bg-[#fdfbf7] border-2 border-[#d7ccc8] rounded-lg focus:border-[#5d4037] outline-none transition-colors text-sm font-serif text-[#3e2723]"
+                            className="w-full p-4 bg-[#fdfbf7] border-2 border-[#d7ccc8] rounded-lg focus:border-[#5d4037] outline-none transition-colors text-sm font-serif text-[#3e2723] disabled:text-gray-500"
                             placeholder="Tulis template pesan di sini..."
                         />
                         <div className="mt-2 flex flex-wrap gap-2">
