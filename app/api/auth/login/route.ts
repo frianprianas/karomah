@@ -51,7 +51,7 @@ export async function POST(req: Request) {
         }
 
         // --- KHUSUS ADMIN: KIRIM OTP ---
-        if (role === 'admin') {
+        if (role === 'admin' && (user as any).role !== 'spv') {
             const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
             const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 menit
 
