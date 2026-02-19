@@ -145,9 +145,9 @@ export default function AdminWaManagement() {
                     <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
                         <h4 className="text-amber-800 font-bold text-sm mb-1 uppercase">Informasi Penjadwalan:</h4>
                         <ul className="text-amber-700 text-xs space-y-1 font-serif">
-                            <li>• Pesan dikirim setiap hari antara pukul 18:30 s/d 21:30 WIB.</li>
+                            <li>• Pesan dikirim setiap hari antara pukul 07:30 s/d 15:00 WIB.</li>
                             <li>• Setiap Wali Kelas akan dikirimi ringkasan progress amalan santri di kelasnya.</li>
-                            <li>• Jeda antar pesan diatur acak antara 10 - 30 menit.</li>
+                            <li>• Jeda antar pesan diatur acak antara 10 - 30 menit untuk menghindari spam.</li>
                         </ul>
                     </div>
                 </div>

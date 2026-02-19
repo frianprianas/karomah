@@ -87,85 +87,114 @@ function getRamadanDay() {
     return Math.min(Math.max(diffDays, 1), 30);
 }
 
+// State to track sent status in memory
+let sentToday = new Set();
+let lastDay = new Date().getDate();
+
 async function runReport() {
-    console.log(`[${new Date().toLocaleTimeString()}] Checking for auto-report schedule...`);
+    const now = new Date();
+
+    // Reset tracker if day changes
+    if (now.getDate() !== lastDay) {
+        console.log('New day detected. Resetting sent list.');
+        sentToday.clear();
+        lastDay = now.getDate();
+    }
+
+    console.log(`[${now.toLocaleTimeString()}] Checking for auto-report schedule...`);
+
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const timeInMinutes = currentHour * 60 + currentMinute;
+
+    // Schedule: 07:30 to 14:00 (Extended window to accommodate 10-30 min intervals for all teachers)
+    const startMinutes = 7 * 60 + 30;  // 07:30
+    const endMinutes = 15 * 60 + 0;    // 15:00
+
+    if (timeInMinutes < startMinutes || timeInMinutes > endMinutes) {
+        console.log('Outside scheduled time range (07:30 - 15:00).');
+        return;
+    }
 
     await connectDB();
 
     const settings = await Setting.findOne({ key: 'wa_auto_report' });
     if (!settings || !settings.value.enabled) {
-        console.log('Feature disabled.');
-        return;
-    }
-
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const timeInMinutes = currentHour * 60 + currentMinute;
-
-    const startMinutes = 18 * 60 + 30; // 18:30
-    const endMinutes = 21 * 60 + 30;   // 21:30
-
-    if (timeInMinutes < startMinutes || timeInMinutes > endMinutes) {
-        console.log('Outside scheduled time range.');
+        console.log('Feature disabled by Admin.');
         return;
     }
 
     const ramadanDay = getRamadanDay();
-    const teachers = await Guru.find({ ket: { $in: ['Wali Kelas', 'Keduanya'] }, noHp: { $exists: true, $ne: '' } });
+    // Filter teachers who haven't received report today
+    const allTeachers = await Guru.find({ ket: { $in: ['Wali Kelas', 'Keduanya'] }, noHp: { $exists: true, $ne: '' } });
+    const pendingTeachers = allTeachers.filter(t => !sentToday.has(t.nipy));
 
-    console.log(`Found ${teachers.length} Wali Kelas to process.`);
+    if (pendingTeachers.length === 0) {
+        console.log('All teachers have received reports for today.');
+        return;
+    }
 
-    for (const teacher of teachers) {
-        if (!teacher.noHp || !teacher.waliKelas) continue;
+    console.log(`Found ${pendingTeachers.length} pending teachers out of ${allTeachers.length}.`);
 
-        // Get students in this class
-        const students = await Siswa.find({ kelas: teacher.waliKelas });
-        const studentNisList = students.map(s => s.nis);
+    // Pick ONE random teacher to send to
+    const teacher = pendingTeachers[Math.floor(Math.random() * pendingTeachers.length)];
 
-        // Get journals for today
-        const journals = await Jurnal.find({
-            nis: { $in: studentNisList },
-            tgl_jurnal: ramadanDay,
-            jam_tidur: { $exists: true, $ne: '' }
-        });
+    if (!teacher.noHp || !teacher.waliKelas) {
+        console.log(`Skipping invalid teacher data: ${teacher.nama}`);
+        sentToday.add(teacher.nipy); // Mark as processed to avoid stuck loop
+        return;
+    }
 
-        const filledCount = journals.length;
-        const totalCount = students.length;
-        const percent = totalCount > 0 ? Math.round((filledCount / totalCount) * 100) : 0;
+    // Process Report for this teacher
+    const students = await Siswa.find({ kelas: teacher.waliKelas });
+    const studentNisList = students.map(s => s.nis);
 
-        // Random greeting
-        const greetings = settings.value.greetings || ["Assalamu'alaikum"];
-        const greeting = greetings[Math.floor(Math.random() * greetings.length)];
+    const journals = await Jurnal.find({
+        nis: { $in: studentNisList },
+        tgl_jurnal: ramadanDay,
+        jam_tidur: { $exists: true, $ne: '' }
+    });
 
-        let body = settings.value.messageTemplate || "Berikut *Laporan Progres Jurnal Ramadan* kelas *[KELAS]* untuk Hari ke-[HARI]:\n\n📊 *Statistik:* \n- Sudah Mengisi: *[ISI] Siswa*\n- Belum Mengisi: *[KOSONG] Siswa*\n- Progres: *[PERSEN]%*";
+    const filledCount = journals.length;
+    const totalCount = students.length;
+    const percent = totalCount > 0 ? Math.round((filledCount / totalCount) * 100) : 0;
 
-        body = body.replace('[KELAS]', teacher.waliKelas)
-            .replace('[HARI]', ramadanDay)
-            .replace('[ISI]', filledCount)
-            .replace('[KOSONG]', totalCount - filledCount)
-            .replace('[PERSEN]', percent);
+    const greetings = settings.value.greetings || ["Assalamu'alaikum"];
+    const greeting = greetings[Math.floor(Math.random() * greetings.length)];
 
-        const message = `${greeting} *Ustadz/ah ${teacher.nama}*,\n\n${body}\n\nMohon bantuannya untuk mengingatkan santri yang belum mengisi agar segera melengkapi jurnalnya hari ini.\n\nTerika kasih,\n_Admin Karomah BN666_`;
+    let body = settings.value.messageTemplate || "Berikut *Laporan Progres Jurnal Ramadan* kelas *[KELAS]* untuk Hari ke-[HARI]:\n\n📊 *Statistik:* \n- Sudah Mengisi: *[ISI] Siswa*\n- Belum Mengisi: *[KOSONG] Siswa*\n- Progres: *[PERSEN]%*";
 
-        console.log(`Sending report to ${teacher.nama} (${teacher.noHp})...`);
+    body = body.replace('[KELAS]', teacher.waliKelas)
+        .replace('[HARI]', ramadanDay)
+        .replace('[ISI]', filledCount)
+        .replace('[KOSONG]', totalCount - filledCount)
+        .replace('[PERSEN]', percent);
+
+    const message = `${greeting} *Ustadz/ah ${teacher.nama}*,\n\n${body}\n\nMohon bantuannya untuk mengingatkan santri yang belum mengisi agar segera melengkapi jurnalnya hari ini.\n\nTerima kasih,\n_Admin Karomah BN666_`;
+
+    console.log(`Sending report to ${teacher.nama} (${teacher.noHp})...`);
+
+    // Send Message
+    try {
         await sendWhatsApp(teacher.noHp, message);
-
-        // Random delay 10-20 seconds between teachers to be safe
-        await new Promise(r => setTimeout(r, 10000 + Math.random() * 10000));
+        console.log('Message sent successfully.');
+        sentToday.add(teacher.nipy);
+    } catch (err) {
+        console.error('Failed to send message:', err);
     }
 }
 
 // Initial run
 async function startWorker() {
     console.log('WhatsApp Auto-Report Worker Started.');
+    console.log('Schedule: 07:30 - 15:00 WIB');
 
     const loop = async () => {
         await runReport();
 
         // Random interval between 10 to 30 minutes
         const nextRunMinutes = 10 + Math.random() * 20;
-        console.log(`Next run in ${Math.round(nextRunMinutes)} minutes.`);
+        console.log(`Next execution in ${Math.round(nextRunMinutes)} minutes.`);
 
         setTimeout(loop, nextRunMinutes * 60 * 1000);
     };
