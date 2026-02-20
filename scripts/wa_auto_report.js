@@ -41,7 +41,7 @@ const JurnalSchema = new mongoose.Schema({
     nis: String,
     tgl_jurnal: Number,
     jam_tidur: String
-});
+}, { timestamps: true });
 const Jurnal = mongoose.models.Jurnal || mongoose.model('Jurnal', JurnalSchema);
 
 async function connectDB() {
@@ -50,7 +50,8 @@ async function connectDB() {
 }
 
 async function sendWhatsApp(target, message) {
-    const token = 'KQ1XKbd2ZHue4cn9e7hc';
+    // If token is in env use it, otherwise fallback (User provided token before)
+    const token = process.env.WHATSAPP_API_TOKEN || 'KQ1XKbd2ZHue4cn9e7hc';
 
     let formattedTarget = target.trim();
     if (formattedTarget.startsWith('0')) {
@@ -72,47 +73,58 @@ async function sendWhatsApp(target, message) {
         return data;
     } catch (error) {
         console.error(`Error sending to ${target}:`, error);
+        throw error;
     }
 }
 
-function getRamadanDay() {
-    // Logic to determine current Ramadan day. 
-    // For simplicity, let's assume we store the start date or just use a fixed day for testing
-    // Or we can determine it based on current date if we know when Ramadan 1447 starts.
-    // Let's assume Ramadan 1 starts on March 2, 2026 (approx for 1447H)
-    const ramadanStart = new Date('2026-02-18'); // FOR TESTING: using today's date
-    const today = new Date();
-    const diffTime = Math.abs(today - ramadanStart);
+function getWIBDate() {
+    const now = new Date();
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    return new Date(utc + (3600000 * 7)); // UTC + 7 (WIB)
+}
+
+function getRamadanDay(wibDate) {
+    // START RAMADAN: 18 FEBRUARI 2026 (As per user context)
+    const ramadanStart = new Date('2026-02-18T00:00:00+07:00');
+
+    // Reset time parts for accurate day diff
+    const d1 = new Date(ramadanStart.getFullYear(), ramadanStart.getMonth(), ramadanStart.getDate());
+    const d2 = new Date(wibDate.getFullYear(), wibDate.getMonth(), wibDate.getDate());
+
+    const diffTime = d2 - d1;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return Math.min(Math.max(diffDays, 1), 30);
+
+    // If before ramadan, return 1? Or 0? Let's stick to positive index logic of app
+    return Math.max(1, diffDays + 1); // If 18th is day 1, then diff is 0, so +1
 }
 
 // State to track sent status in memory
 let sentToday = new Set();
-let lastDay = new Date().getDate();
+let lastDay = -1;
 
 async function runReport() {
-    const now = new Date();
+    const nowWIB = getWIBDate();
+    const currentDay = nowWIB.getDate();
+
+    console.log(`[${nowWIB.toLocaleTimeString('id-ID')}] Logic Run...`);
 
     // Reset tracker if day changes
-    if (now.getDate() !== lastDay) {
-        console.log('New day detected. Resetting sent list.');
+    if (currentDay !== lastDay) {
+        console.log('New day detected (WIB). Resetting sent list.');
         sentToday.clear();
-        lastDay = now.getDate();
+        lastDay = currentDay;
     }
 
-    console.log(`[${now.toLocaleTimeString()}] Checking for auto-report schedule...`);
-
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
+    const currentHour = nowWIB.getHours();
+    const currentMinute = nowWIB.getMinutes();
     const timeInMinutes = currentHour * 60 + currentMinute;
 
-    // Schedule: 07:30 to 14:00 (Extended window to accommodate 10-30 min intervals for all teachers)
+    // Schedule: 07:30 to 12:00 WIB
     const startMinutes = 7 * 60 + 30;  // 07:30
-    const endMinutes = 15 * 60 + 0;    // 15:00
+    const endMinutes = 12 * 60 + 0;    // 12:00
 
     if (timeInMinutes < startMinutes || timeInMinutes > endMinutes) {
-        console.log('Outside scheduled time range (07:30 - 15:00).');
+        console.log(`Outside scheduled time range (07:30 - 12:00). Current: ${currentHour}:${currentMinute < 10 ? '0' : ''}${currentMinute}`);
         return;
     }
 
@@ -124,7 +136,6 @@ async function runReport() {
         return;
     }
 
-    const ramadanDay = getRamadanDay();
     // Filter teachers who haven't received report today
     const allTeachers = await Guru.find({ ket: { $in: ['Wali Kelas', 'Keduanya'] }, noHp: { $exists: true, $ne: '' } });
     const pendingTeachers = allTeachers.filter(t => !sentToday.has(t.nipy));
@@ -141,7 +152,7 @@ async function runReport() {
 
     if (!teacher.noHp || !teacher.waliKelas) {
         console.log(`Skipping invalid teacher data: ${teacher.nama}`);
-        sentToday.add(teacher.nipy); // Mark as processed to avoid stuck loop
+        sentToday.add(teacher.nipy);
         return;
     }
 
@@ -149,10 +160,21 @@ async function runReport() {
     const students = await Siswa.find({ kelas: teacher.waliKelas });
     const studentNisList = students.map(s => s.nis);
 
+    // Get journals for TODAY (WIB)
+    const startOfDay = new Date(nowWIB);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    // Determine Ramadan Day for template text
+    const ramadanDay = getRamadanDay(nowWIB);
+
+    // Query journals created today OR with tgl_jurnal matching today's ramadan day
+    // This covers both cases (filled today, or filled explicitly for today's index)
     const journals = await Jurnal.find({
         nis: { $in: studentNisList },
-        tgl_jurnal: ramadanDay,
-        jam_tidur: { $exists: true, $ne: '' }
+        $or: [
+            { tgl_jurnal: ramadanDay },
+            { createdAt: { $gte: startOfDay } }
+        ]
     });
 
     const filledCount = journals.length;
@@ -187,14 +209,19 @@ async function runReport() {
 // Initial run
 async function startWorker() {
     console.log('WhatsApp Auto-Report Worker Started.');
-    console.log('Schedule: 07:30 - 15:00 WIB');
+    console.log('Schedule: 07:30 - 12:00 WIB (UTC+7)');
 
     const loop = async () => {
-        await runReport();
+        try {
+            await runReport();
+        } catch (error) {
+            console.error('Worker Error:', error);
+        }
 
-        // Random interval between 10 to 30 minutes
-        const nextRunMinutes = 10 + Math.random() * 20;
-        console.log(`Next execution in ${Math.round(nextRunMinutes)} minutes.`);
+        // Random interval between 5 to 15 minutes (Faster for checking)
+        // User wants control start 07:30.
+        const nextRunMinutes = 5 + Math.random() * 10;
+        console.log(`Next check in ${Math.round(nextRunMinutes)} minutes.`);
 
         setTimeout(loop, nextRunMinutes * 60 * 1000);
     };
