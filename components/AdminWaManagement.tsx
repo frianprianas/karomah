@@ -17,9 +17,7 @@ export default function AdminWaManagement({ userRole }: { userRole?: string }) {
     const [blastMode, setBlastMode] = useState(false);
     const [teacherList, setTeacherList] = useState<any[]>([]);
     const [sendingStatus, setSendingStatus] = useState<Record<string, 'waiting' | 'sending' | 'sent' | 'error'>>({});
-    const [isBlasting, setIsBlasting] = useState(false);
-    const [blastProgress, setBlastProgress] = useState({ current: 0, total: 0 });
-    const [nextBlastTime, setNextBlastTime] = useState<Date | null>(null);
+    const [loadingStats, setLoadingStats] = useState(false);
     const [ramadanDay, setRamadanDay] = useState(1);
 
     const isReadOnly = userRole === 'spv';
@@ -43,24 +41,24 @@ export default function AdminWaManagement({ userRole }: { userRole?: string }) {
     };
 
     const fetchTeacherStats = async () => {
-        setLoading(true);
+        setLoadingStats(true);
         try {
             const res = await fetch('/api/admin/wa-blast');
             const data = await res.json();
             if (data.teachers) {
                 setTeacherList(data.teachers);
                 setRamadanDay(data.ramadanDay);
-                // Initialize status
-                const initialStatus: any = {};
+                // Initialize status for teachers not already set
+                const initialStatus = { ...sendingStatus };
                 data.teachers.forEach((t: any) => {
-                    initialStatus[t.id] = 'waiting';
+                    if (!initialStatus[t.id]) initialStatus[t.id] = 'waiting';
                 });
                 setSendingStatus(initialStatus);
             }
         } catch (error) {
             console.error('Error fetching teacher stats:', error);
         } finally {
-            setLoading(false);
+            setLoadingStats(false);
         }
     };
 
@@ -90,7 +88,9 @@ export default function AdminWaManagement({ userRole }: { userRole?: string }) {
         setSettings({ ...settings, greetings: newGreetings });
     };
 
-    const sendToOneTeacher = async (teacher: any) => {
+    const handleSendIndividual = async (teacher: any) => {
+        if (sendingStatus[teacher.id] === 'sending') return;
+
         setSendingStatus(prev => ({ ...prev, [teacher.id]: 'sending' }));
         try {
             const res = await fetch('/api/admin/wa-blast', {
@@ -105,51 +105,14 @@ export default function AdminWaManagement({ userRole }: { userRole?: string }) {
             const data = await res.json();
             if (data.success) {
                 setSendingStatus(prev => ({ ...prev, [teacher.id]: 'sent' }));
-                return true;
             } else {
                 setSendingStatus(prev => ({ ...prev, [teacher.id]: 'error' }));
-                return false;
+                alert('Gagal mengirim: ' + (data.error || 'Terjadi kesalahan'));
             }
         } catch (error) {
             setSendingStatus(prev => ({ ...prev, [teacher.id]: 'error' }));
-            return false;
+            alert('Error koneksi saat mengirim.');
         }
-    };
-
-    const startBlast = async () => {
-        if (!confirm('Mulai kirim blast ke semua Wali Kelas dengan jeda waktu acak?')) return;
-        setIsBlasting(true);
-        setBlastProgress({ current: 0, total: teacherList.length });
-
-        const delays = [5, 7, 11, 20, 30]; // minutes
-
-        for (let i = 0; i < teacherList.length; i++) {
-            const teacher = teacherList[i];
-
-            // Skip if already sent
-            if (sendingStatus[teacher.id] === 'sent') {
-                setBlastProgress(p => ({ ...p, current: i + 1 }));
-                continue;
-            }
-
-            setBlastProgress(p => ({ ...p, current: i + 1 }));
-            await sendToOneTeacher(teacher);
-
-            if (i < teacherList.length - 1) {
-                const randomDelay = delays[Math.floor(Math.random() * delays.length)];
-                const delayMs = randomDelay * 60 * 1000;
-
-                const nextTime = new Date(Date.now() + delayMs);
-                setNextBlastTime(nextTime);
-
-                // Wait for the delay
-                await new Promise(resolve => setTimeout(resolve, delayMs));
-                setNextBlastTime(null);
-            }
-        }
-
-        setIsBlasting(false);
-        alert('Blast Selesai!');
     };
 
     if (loading && !blastMode) return null;
@@ -291,25 +254,17 @@ export default function AdminWaManagement({ userRole }: { userRole?: string }) {
                 <div className="space-y-6">
                     <div className="bg-[#5d4037] text-[#fdfbf7] p-6 rounded-xl shadow-lg border-2 border-[#3e2723] flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="text-center md:text-left">
-                            <h3 className="text-xl font-bold mb-1">Panel Kendali Blast</h3>
+                            <h3 className="text-xl font-bold mb-1">Panel Blast Per Wali Kelas</h3>
                             <p className="text-amber-200 text-sm italic">Hari ke-{ramadanDay} Ramadan</p>
                         </div>
 
                         <div className="flex gap-4 items-center">
-                            {isBlasting && (
-                                <div className="text-right mr-4">
-                                    <p className="text-[10px] font-bold text-amber-300 uppercase animate-pulse">Proses Berjalan...</p>
-                                    <p className="text-lg font-mono text-white">
-                                        {nextBlastTime ? `Next: ${nextBlastTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}` : 'Mengirim...'}
-                                    </p>
-                                </div>
-                            )}
                             <button
-                                onClick={startBlast}
-                                disabled={isBlasting || teacherList.length === 0}
-                                className={`px-10 py-4 rounded-full font-bold text-lg shadow-xl transform active:scale-95 transition-all ${isBlasting ? 'bg-amber-600 cursor-not-allowed' : 'bg-[#fdfbf7] text-[#5d4037] hover:bg-white'}`}
+                                onClick={fetchTeacherStats}
+                                disabled={loadingStats}
+                                className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-bold text-xs border border-white/20 transition-all"
                             >
-                                {isBlasting ? `PROGRES: ${blastProgress.current}/${blastProgress.total}` : 'MULAI BLAST WA'}
+                                {loadingStats ? 'REFRESHING...' : 'REFRESH DATA'}
                             </button>
                         </div>
                     </div>
@@ -321,15 +276,15 @@ export default function AdminWaManagement({ userRole }: { userRole?: string }) {
                                     <th className="px-6 py-4 text-xs font-bold text-[#5d4037] uppercase tracking-wider">Wali Kelas</th>
                                     <th className="px-6 py-4 text-xs font-bold text-[#5d4037] uppercase tracking-wider text-center">Data Jurnal</th>
                                     <th className="px-6 py-4 text-xs font-bold text-[#5d4037] uppercase tracking-wider">WhatsApp</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-[#5d4037] uppercase tracking-wider text-right">Status</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-[#5d4037] uppercase tracking-wider text-right">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-[#d7ccc8]">
-                                {teacherList.length === 0 && !loading ? (
+                                {teacherList.length === 0 && !loadingStats ? (
                                     <tr>
                                         <td colSpan={4} className="px-6 py-10 text-center text-[#8d6e63] italic">Tidak ada wali kelas dengan nomor HP valid.</td>
                                     </tr>
-                                ) : loading ? (
+                                ) : loadingStats && teacherList.length === 0 ? (
                                     <tr>
                                         <td colSpan={4} className="px-6 py-10 text-center">
                                             <div className="flex justify-center items-center gap-3">
@@ -360,19 +315,30 @@ export default function AdminWaManagement({ userRole }: { userRole?: string }) {
                                                 {teacher.noHp}
                                             </td>
                                             <td className="px-6 py-4 text-right">
-                                                {sendingStatus[teacher.id] === 'waiting' && <span className="inline-block w-3 h-3 rounded-full bg-gray-200"></span>}
-                                                {sendingStatus[teacher.id] === 'sending' && <span className="inline-block w-3 h-3 rounded-full bg-amber-500 animate-ping"></span>}
-                                                {sendingStatus[teacher.id] === 'sent' && (
-                                                    <div className="flex items-center justify-end gap-2 text-emerald-600">
-                                                        <span className="text-[10px] font-bold uppercase">Terkirim</span>
-                                                        <span className="inline-block w-3 h-3 rounded-full bg-emerald-500"></span>
+                                                {sendingStatus[teacher.id] === 'sent' ? (
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="text-[10px] text-emerald-600 font-bold uppercase mb-1">Berhasil Terkirim</span>
+                                                        <button
+                                                            onClick={() => handleSendIndividual(teacher)}
+                                                            className="text-[9px] text-[#8d6e63] hover:text-[#5d4037] underline"
+                                                        >
+                                                            Kirim Ulang?
+                                                        </button>
                                                     </div>
-                                                )}
-                                                {sendingStatus[teacher.id] === 'error' && (
-                                                    <div className="flex items-center justify-end gap-2 text-rose-600">
-                                                        <span className="text-[10px] font-bold uppercase">Gagal</span>
-                                                        <span className="inline-block w-3 h-3 rounded-full bg-rose-500"></span>
-                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleSendIndividual(teacher)}
+                                                        disabled={sendingStatus[teacher.id] === 'sending'}
+                                                        className={`px-4 py-2 rounded-lg font-bold text-[10px] shadow-sm transition-all ${sendingStatus[teacher.id] === 'sending'
+                                                                ? 'bg-amber-100 text-amber-600 cursor-not-allowed animate-pulse'
+                                                                : sendingStatus[teacher.id] === 'error'
+                                                                    ? 'bg-rose-600 text-white hover:bg-rose-700'
+                                                                    : 'bg-[#5d4037] text-white hover:bg-[#3e2723]'
+                                                            }`}
+                                                    >
+                                                        {sendingStatus[teacher.id] === 'sending' ? 'MENGIRIM...' :
+                                                            sendingStatus[teacher.id] === 'error' ? 'GAGAL, COBA LAGI' : 'KIRIM WA'}
+                                                    </button>
                                                 )}
                                             </td>
                                         </tr>
@@ -383,10 +349,10 @@ export default function AdminWaManagement({ userRole }: { userRole?: string }) {
                     </div>
 
                     <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg flex items-start gap-3">
-                        <div className="text-amber-600 font-bold text-xs uppercase animate-pulse">Peringatan:</div>
+                        <div className="text-amber-600 font-bold text-xs uppercase">Mode Manual:</div>
                         <div className="text-amber-800 text-[10px] font-serif leading-relaxed">
-                            Mode manual menggunakan jeda acak (5, 7, 11, 20, atau 30 menit) di antara setiap pengiriman.
-                            Jangan menutup tab browser ini atau mematikan koneksi internet sampai proses selesai untuk memastikan semua pesan terkirim.
+                            Bapak bisa mengirim pesan satu per satu ke setiap Wali Kelas dengan menekan tombol <b>KIRIM WA</b> di atas.
+                            Sistem akan otomatis memilih 1 dari 4 salam pembuka secara acak untuk setiap pengiriman agar pesan tetap variatif.
                         </div>
                     </div>
                 </div>
