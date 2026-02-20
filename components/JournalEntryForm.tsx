@@ -455,7 +455,7 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                                 <Users style={{ width: '24px', height: '24px' }} />
                             </div>
                             <div>
-                                <h4 style={{ fontSize: '18px', fontWeight: 'bold', color: '#3e2723', margin: 0 }}>STATUS BERHALANGAN (DEBUG V2)</h4>
+                                <h4 style={{ fontSize: '18px', fontWeight: 'bold', color: '#3e2723', margin: 0 }}>STATUS BERHALANGAN</h4>
                                 <p style={{ fontSize: '13px', color: '#dc2626', fontWeight: 'bold', fontStyle: 'italic', margin: '4px 0 0 0' }}>Gunakan ini jika anda "Akhwat yang sedang berhalangan"</p>
                             </div>
                         </div>
