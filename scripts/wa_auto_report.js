@@ -14,35 +14,31 @@ if (!MONGODB_URI) {
     process.exit(1);
 }
 
-// Models
-const SettingSchema = new mongoose.Schema({
+// Model Definitions with Explicit Collection Names (To match Next.js Mongoose models)
+const Setting = mongoose.models.Setting || mongoose.model('Setting', new mongoose.Schema({
     key: String,
     value: mongoose.Schema.Types.Mixed
-});
-const Setting = mongoose.models.Setting || mongoose.model('Setting', SettingSchema);
+}), 'settings');
 
-const GuruSchema = new mongoose.Schema({
+const Guru = mongoose.models.Guru || mongoose.model('Guru', new mongoose.Schema({
     nipy: String,
     nama: String,
     ket: String,
     noHp: String,
     waliKelas: String
-});
-const Guru = mongoose.models.Guru || mongoose.model('Guru', GuruSchema);
+}), 'gurus');
 
-const SiswaSchema = new mongoose.Schema({
+const Siswa = mongoose.models.Siswa || mongoose.model('Siswa', new mongoose.Schema({
     nis: String,
     nama: String,
     kelas: String
-});
-const Siswa = mongoose.models.Siswa || mongoose.model('Siswa', SiswaSchema);
+}), 'siswas');
 
-const JurnalSchema = new mongoose.Schema({
+const Jurnal = mongoose.models.Jurnal || mongoose.model('Jurnal', new mongoose.Schema({
     nis: String,
     tgl_jurnal: Number,
     jam_tidur: String
-}, { timestamps: true });
-const Jurnal = mongoose.models.Jurnal || mongoose.model('Jurnal', JurnalSchema);
+}, { timestamps: true }), 'jurnals');
 
 async function connectDB() {
     if (mongoose.connection.readyState >= 1) return;
@@ -84,7 +80,7 @@ function getWIBDate() {
 }
 
 function getRamadanDay(wibDate) {
-    // START RAMADAN: 18 FEBRUARI 2026 (As per user context)
+    // Current Context Start Ramadan: 18 FEBRUARI 2026
     const ramadanStart = new Date('2026-02-18T00:00:00+07:00');
 
     // Reset time parts for accurate day diff
@@ -106,11 +102,11 @@ async function runReport() {
     const nowWIB = getWIBDate();
     const currentDay = nowWIB.getDate();
 
-    console.log(`[${nowWIB.toLocaleTimeString('id-ID')}] Logic Run...`);
+    console.log(`[LOG ${nowWIB.toLocaleTimeString('id-ID')}] Checking report trigger...`);
 
     // Reset tracker if day changes
     if (currentDay !== lastDay) {
-        console.log('New day detected (WIB). Resetting sent list.');
+        console.log('--- New day detected (WIB). Resetting sentToday list ---');
         sentToday.clear();
         lastDay = currentDay;
     }
@@ -119,45 +115,52 @@ async function runReport() {
     const currentMinute = nowWIB.getMinutes();
     const timeInMinutes = currentHour * 60 + currentMinute;
 
-    // Schedule: 08:15 to 13:00 WIB (Monitoring Mode)
-    const startMinutes = 8 * 60 + 15;  // 08:15
-    const endMinutes = 13 * 60 + 0;    // 13:00
+    // Schedule: 08:45 to 13:00 WIB
+    const startMinutes = 8 * 60 + 45;  // 08:45
+    const endMinutes = 13 * 60 + 0;   // 13:00
 
     if (timeInMinutes < startMinutes || timeInMinutes > endMinutes) {
-        console.log(`Outside scheduled time range (08:15 - 13:00). Current: ${currentHour}:${currentMinute < 10 ? '0' : ''}${currentMinute}`);
+        console.log(`[INFO] Outside scheduled range (08:45-13:00). Current: ${currentHour}:${currentMinute < 10 ? '0' : ''}${currentMinute}`);
         return;
     }
 
     await connectDB();
 
-    const settings = await Setting.findOne({ key: 'wa_auto_report' });
+    const settings = await Setting.findOne({ key: 'wa_auto_report' }).lean();
     if (!settings || !settings.value.enabled) {
-        console.log('Feature disabled by Admin.');
+        console.log('[WARN] Feature wa_auto_report is DISABLED in settings.');
         return;
     }
 
-    // Filter teachers who haven't received report today
-    const allTeachers = await Guru.find({ ket: { $in: ['Wali Kelas', 'Keduanya'] }, noHp: { $exists: true, $ne: '' } });
+    // Query Wali Kelas with explicit filter
+    const allTeachers = await Guru.find({
+        ket: { $in: ['Wali Kelas', 'Keduanya'] },
+        noHp: { $exists: true, $ne: '' },
+        waliKelas: { $exists: true, $ne: null, $ne: '' }
+    }).lean();
+
     const pendingTeachers = allTeachers.filter(t => !sentToday.has(t.nipy));
 
     if (pendingTeachers.length === 0) {
-        console.log('All teachers have received reports for today.');
+        console.log('[INFO] No pending teachers for today.');
         return;
     }
 
-    console.log(`Found ${pendingTeachers.length} pending teachers out of ${allTeachers.length}.`);
+    console.log(`[INFO] Found ${pendingTeachers.length} pending teachers out of ${allTeachers.length} active Wali Kelas.`);
 
     // Pick ONE random teacher to send to
     const teacher = pendingTeachers[Math.floor(Math.random() * pendingTeachers.length)];
 
-    if (!teacher.noHp || !teacher.waliKelas) {
-        console.log(`Skipping invalid teacher data: ${teacher.nama}`);
+    console.log(`[INFO] Processing report for: ${teacher.nama} (Kelas: ${teacher.waliKelas})`);
+
+    // Process Report for this teacher
+    const students = await Siswa.find({ kelas: teacher.waliKelas }).lean();
+    if (students.length === 0) {
+        console.log(`[WARN] No students found for class ${teacher.waliKelas}. Skipping.`);
         sentToday.add(teacher.nipy);
         return;
     }
 
-    // Process Report for this teacher
-    const students = await Siswa.find({ kelas: teacher.waliKelas });
     const studentNisList = students.map(s => s.nis);
 
     // Get journals for TODAY (WIB)
@@ -175,7 +178,7 @@ async function runReport() {
             { tgl_jurnal: ramadanDay },
             { createdAt: { $gte: startOfDay } }
         ]
-    });
+    }).lean();
 
     const filledCount = journals.length;
     const totalCount = students.length;
@@ -194,45 +197,52 @@ async function runReport() {
 
     const message = `${greeting} *Ustadz/ah ${teacher.nama}*,\n\n${body}\n\nMohon bantuannya untuk mengingatkan santri yang belum mengisi agar segera melengkapi jurnalnya hari ini.\n\nTerima kasih,\n_Admin Karomah BN666_`;
 
-    console.log(`Sending report to ${teacher.nama} (${teacher.noHp})...`);
+    console.log(`[ACTION] Sending WhatsApp message to ${teacher.nama} (${teacher.noHp})...`);
 
-    // Send Message
     try {
-        await sendWhatsApp(teacher.noHp, message);
-        console.log('Message sent successfully.');
-        sentToday.add(teacher.nipy);
+        const result = await sendWhatsApp(teacher.noHp, message);
+        if (result && result.status === true) {
+            console.log(`[SUCCESS] Message successfully queued for ${teacher.nama}.`);
+            sentToday.add(teacher.nipy);
+        } else {
+            console.error(`[ERROR] Fonnte reported failure: ${JSON.stringify(result)}`);
+        }
     } catch (err) {
-        console.error('Failed to send message:', err);
+        console.error(`[CRITICAL] Failed to execute sendWhatsApp:`, err.message);
     }
 }
 
 // Initial run
 async function startWorker() {
-    console.log('WhatsApp Auto-Report Worker Started.');
-    console.log('Schedule: 08:15 - 13:00 WIB (Monitoring Mode)');
+    console.log('============================================');
+    console.log('WhatsApp Auto-Report Worker Started Bootstrapping');
+    console.log('Schedule: 08:45 - 13:00 WIB');
+    console.log('============================================');
 
     const loop = async () => {
         try {
             await runReport();
         } catch (error) {
-            console.error('Worker Error:', error);
+            console.error('[EROR] Worker Loop Failed:', error);
         }
 
         const nowWIB = getWIBDate();
         const currentHour = nowWIB.getHours();
         const currentMinute = nowWIB.getMinutes();
         const timeInMinutes = currentHour * 60 + currentMinute;
-        const startMinutes = 8 * 60 + 15;
+        const startMinutes = 8 * 60 + 45;
 
         let nextRunMinutes;
-        // Jika sekarang jam 08:00 - 08:15 (mendekati jadwal), cek tiap 1 menit supaya tidak telat
-        if (timeInMinutes >= startMinutes - 15 && timeInMinutes < startMinutes) {
-            nextRunMinutes = 1;
+        // High frequency check near start time
+        if (timeInMinutes >= startMinutes - 10 && timeInMinutes < startMinutes) {
+            nextRunMinutes = 0.5; // Every 30 seconds to be precise
+        } else if (timeInMinutes >= startMinutes && timeInMinutes <= startMinutes + 10) {
+            nextRunMinutes = 2; // Every 2 minutes during initial hour
         } else {
             nextRunMinutes = 5 + Math.random() * 10;
         }
 
-        console.log(`Next check in ${Math.round(nextRunMinutes)} minutes.`);
+        console.log(`[WAIT] Next run in ${Math.round(nextRunMinutes * 10) / 10} minutes.`);
         setTimeout(loop, nextRunMinutes * 60 * 1000);
     };
 
