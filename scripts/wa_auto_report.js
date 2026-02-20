@@ -218,11 +218,21 @@ async function startWorker() {
             console.error('Worker Error:', error);
         }
 
-        // Random interval between 5 to 15 minutes (Faster for checking)
-        // User wants control start 07:30.
-        const nextRunMinutes = 5 + Math.random() * 10;
-        console.log(`Next check in ${Math.round(nextRunMinutes)} minutes.`);
+        const nowWIB = getWIBDate();
+        const currentHour = nowWIB.getHours();
+        const currentMinute = nowWIB.getMinutes();
+        const timeInMinutes = currentHour * 60 + currentMinute;
+        const startMinutes = 8 * 60 + 15;
 
+        let nextRunMinutes;
+        // Jika sekarang jam 08:00 - 08:15 (mendekati jadwal), cek tiap 1 menit supaya tidak telat
+        if (timeInMinutes >= startMinutes - 15 && timeInMinutes < startMinutes) {
+            nextRunMinutes = 1;
+        } else {
+            nextRunMinutes = 5 + Math.random() * 10;
+        }
+
+        console.log(`Next check in ${Math.round(nextRunMinutes)} minutes.`);
         setTimeout(loop, nextRunMinutes * 60 * 1000);
     };
 
