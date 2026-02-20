@@ -447,19 +447,19 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                 )}
 
 
-                {/* Halangan (Haid) Toggle - FORCED VISIBILITY */}
-                <div className="w-full mb-8 bg-[#fff5f5] p-6 rounded-xl border-4 border-red-200 shadow-md relative z-50">
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <div className={`p-3 rounded-full ${formData.sedang_halangan ? 'bg-red-600 text-white shadow-lg' : 'bg-gray-300 text-gray-500'} transition-all`}>
-                                <Users className="w-6 h-6" />
+                {/* Halangan (Haid) Toggle - FORCED VISIBILITY WITH INLINE STYLES */}
+                <div style={{ width: '100%', marginBottom: '32px', backgroundColor: '#fff5f5', padding: '24px', borderRadius: '12px', border: '5px solid #ff4444', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', position: 'relative', zIndex: 999 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <div style={{ padding: '12px', borderRadius: '9999px', backgroundColor: formData.sedang_halangan ? '#dc2626' : '#d1d5db', color: '#ffffff' }}>
+                                <Users style={{ width: '24px', height: '24px' }} />
                             </div>
                             <div>
-                                <h4 className="text-lg font-bold text-[#3e2723] font-serif">Status Berhalangan</h4>
-                                <p className="text-xs text-red-600 font-serif font-bold italic">Gunakan ini jika anda "Akhwat yang sedang berhalangan"</p>
+                                <h4 style={{ fontSize: '18px', fontWeight: 'bold', color: '#3e2723', margin: 0 }}>STATUS BERHALANGAN (DEBUG V2)</h4>
+                                <p style={{ fontSize: '13px', color: '#dc2626', fontWeight: 'bold', fontStyle: 'italic', margin: '4px 0 0 0' }}>Gunakan ini jika anda "Akhwat yang sedang berhalangan"</p>
                             </div>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
+                        <label style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
                             <input
                                 type="checkbox"
                                 checked={formData.sedang_halangan}
@@ -476,16 +476,13 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                                         } : {})
                                     });
                                 }}
-                                className="sr-only peer"
+                                style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
                             />
-                            <div className="w-14 h-7 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-red-600"></div>
+                            <div style={{ width: '56px', height: '28px', backgroundColor: formData.sedang_halangan ? '#dc2626' : '#d1d5db', borderRadius: '9999px', position: 'relative' }}>
+                                <div style={{ width: '24px', height: '24px', backgroundColor: '#ffffff', borderRadius: '50%', position: 'absolute', top: '2px', left: formData.sedang_halangan ? '30px' : '2px', transition: 'all 0.2s' }}></div>
+                            </div>
                         </label>
                     </div>
-                    {formData.sedang_halangan && (
-                        <div className="mt-4 p-3 bg-white/90 rounded-lg border border-red-100 text-[11px] text-red-800 font-serif leading-relaxed italic">
-                            "Amalan ibadah otomatis dinonaktifkan. Tetap semangat menjalankan ibadah lainnya!"
-                        </div>
-                    )}
                 </div>
 
                 {/* Rutinitas Pagi */}
