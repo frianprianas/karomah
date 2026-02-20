@@ -159,6 +159,7 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
         aktifitas_sosial: { ya_tidak: false, kegiatan: '', foto: '' },
         catatan_ihsan: { tipe: 'Langsung', sumber: '', link: '', lokasi: '', nama_tempat: '', isi: '', foto: '' },
         jam_tidur: '',
+        sedang_halangan: false,
         tanda_tangan: ''
     };
 
@@ -445,8 +446,50 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                     </div>
                 )}
 
-                {/* Basic Info */}
-                <section className="space-y-4">
+                {/* Halangan (Haid) Toggle */}
+                <div className="bg-gradient-to-r from-red-50 to-orange-50 p-4 rounded-xl border border-red-100 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-full ${formData.sedang_halangan ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-500'} transition-colors`}>
+                                <Users className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-bold text-[#3e2723] font-serif">Sedang Berhalangan (Haid)</h4>
+                                <p className="text-[10px] text-[#8d6e63] font-serif italic">Khusus Siswi: Aktifkan jika sedang berhalangan ibadah</p>
+                            </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={formData.sedang_halangan}
+                                onChange={(e) => {
+                                    const val = e.target.checked;
+                                    setFormData({
+                                        ...formData,
+                                        sedang_halangan: val,
+                                        // Reset religious fields if halangan is active (optional but cleaner)
+                                        ...(val ? {
+                                            sahur: false,
+                                            sholat_wajib: DEFAULT_DATA.sholat_wajib,
+                                            sholat_sunah: DEFAULT_DATA.sholat_sunah,
+                                            tadarus: DEFAULT_DATA.tadarus
+                                        } : {})
+                                    });
+                                }}
+                                className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
+                        </label>
+                    </div>
+                    {formData.sedang_halangan && (
+                        <div className="mt-3 p-2 bg-white/60 rounded border border-red-100 text-[10px] text-red-700 font-serif leading-relaxed italic animate-in zoom-in duration-300">
+                            "Ketika berhalangan, pengisian amalan sholat, puasa, dan tadarus akan dinonaktifkan secara otomatis. Tetaplah berdzikir dan berbuat kebaikan lainnya."
+                        </div>
+                    )}
+                </div>
+
+                {/* Rutinitas Pagi */}
+                <section className={`space-y-4 transition-all duration-500 ${formData.sedang_halangan ? 'opacity-50 grayscale' : ''}`}>
                     <h3 className="text-xl font-serif font-bold text-[#3e2723] border-b border-[#8d6e63]/30 pb-2">Rutinitas Pagi</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
@@ -470,7 +513,7 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                 </section>
 
                 {/* Sholat Wajib */}
-                <section className="space-y-4">
+                <section className={`space-y-4 transition-all duration-500 ${formData.sedang_halangan ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
                     <h3 className="text-xl font-serif font-bold text-[#3e2723] border-b border-[#8d6e63]/30 pb-2">Sholat Wajib</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {Object.keys(formData.sholat_wajib).map((prayer) => (
@@ -489,7 +532,7 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                 </section>
 
                 {/* Sholat Sunah */}
-                <section className="space-y-4">
+                <section className={`space-y-4 transition-all duration-500 ${formData.sedang_halangan ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
                     <h3 className="text-xl font-serif font-bold text-[#3e2723] border-b border-[#8d6e63]/30 pb-2">Sholat Sunnah</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {Object.keys(formData.sholat_sunah).map((prayer) => (
@@ -508,7 +551,7 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                 </section>
 
                 {/* Tadarus */}
-                <section className="space-y-4">
+                <section className={`space-y-4 transition-all duration-500 ${formData.sedang_halangan ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
                     <h3 className="text-xl font-serif font-bold text-[#3e2723] border-b border-[#8d6e63]/30 pb-2">Tadarus Al-Qur'an</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>

@@ -25,6 +25,7 @@ export async function POST(req: Request) {
             aktifitas_sosial,
             catatan_ihsan,
             jam_tidur,
+            sedang_halangan,
             tanda_tangan
         } = await req.json();
 
@@ -49,6 +50,7 @@ export async function POST(req: Request) {
                     aktifitas_sosial,
                     catatan_ihsan,
                     jam_tidur,
+                    sedang_halangan,
                     tanda_tangan
                 }
             },

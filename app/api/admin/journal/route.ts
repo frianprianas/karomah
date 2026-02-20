@@ -39,17 +39,19 @@ export async function GET(req: Request) {
         const journals = await Jurnal.find({
             nis: { $in: studentNises },
             createdAt: { $gte: startOfDay, $lte: endOfDay }
-        }).select('nis _id').lean();
+        }).select('nis _id sedang_halangan').lean();
 
-        const journalMap = new Set(journals.map((j: any) => j.nis));
-
-        const result = students.map((s: any) => ({
-            _id: s._id,
-            nis: s.nis,
-            nama: s.nama,
-            jurnalFilled: journalMap.has(s.nis),
-            journalId: journals.find((j: any) => j.nis === s.nis)?._id
-        }));
+        const result = students.map((s: any) => {
+            const journal = journals.find((j: any) => j.nis === s.nis);
+            return {
+                _id: s._id,
+                nis: s.nis,
+                nama: s.nama,
+                jurnalFilled: !!journal,
+                sedangHalangan: journal?.sedang_halangan || false,
+                journalId: journal?._id
+            };
+        });
 
         return NextResponse.json(result);
 

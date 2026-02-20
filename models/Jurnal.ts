@@ -49,6 +49,7 @@ export interface IJurnal extends Document {
         foto?: string;
     };
     jam_tidur: string;
+    sedang_halangan?: boolean;
     catatan_guru?: string;
     nama_guru_komentar?: string;
     dikomentari_pada?: Date;
@@ -105,6 +106,7 @@ const JurnalSchema: Schema = new Schema({
         foto: { type: String, default: '' }
     },
     jam_tidur: { type: String, default: '' },
+    sedang_halangan: { type: Boolean, default: false },
     catatan_guru: { type: String, default: '' },
     nama_guru_komentar: { type: String, default: '' },
     dikomentari_pada: { type: Date },

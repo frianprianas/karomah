@@ -48,6 +48,12 @@ export function calculatePoints(jurnal: IJurnal): number {
     if (jurnal.aktifitas_sosial && jurnal.aktifitas_sosial.ya_tidak) points += 10;
     if (jurnal.olah_raga && jurnal.olah_raga.ya_tidak) points += 5;
 
+    // 6. Halangan (Menstruation) Compensation
+    // Grant equivalent points for mandatory ibadah that cannot be performed
+    if (jurnal.sedang_halangan) {
+        points += 70; // 50 (Sholat) + 10 (Sahur) + 10 (Tadarus)
+    }
+
     return points;
 }
 

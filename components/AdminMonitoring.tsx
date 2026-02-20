@@ -190,9 +190,16 @@ export default function AdminMonitoring({ role }: { role: string }) {
                                             </td>
                                             <td className="px-6 py-4 text-center">
                                                 {student.jurnalFilled ? (
-                                                    <span className="inline-flex items-center bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full border border-green-200">
-                                                        <CheckCircle className="w-3 h-3 mr-1" /> Sudah Mengisi
-                                                    </span>
+                                                    <div className="flex flex-col items-center gap-1">
+                                                        <span className="inline-flex items-center bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full border border-green-200">
+                                                            <CheckCircle className="w-3 h-3 mr-1" /> Sudah Mengisi
+                                                        </span>
+                                                        {student.sedangHalangan && (
+                                                            <span className="inline-flex items-center bg-pink-100 text-pink-700 text-[10px] px-2 py-0.5 rounded-full border border-pink-200 font-bold uppercase tracking-tighter">
+                                                                Sdg Halangan
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 ) : (
                                                     <span className="inline-flex items-center bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full border border-red-200">
                                                         <XCircle className="w-3 h-3 mr-1" /> Belum Mengisi
