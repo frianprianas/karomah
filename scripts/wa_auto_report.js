@@ -119,12 +119,12 @@ async function runReport() {
     const currentMinute = nowWIB.getMinutes();
     const timeInMinutes = currentHour * 60 + currentMinute;
 
-    // Schedule: 07:30 to 12:00 WIB
-    const startMinutes = 7 * 60 + 30;  // 07:30
-    const endMinutes = 12 * 60 + 0;    // 12:00
+    // Schedule: 08:15 to 13:00 WIB (Monitoring Mode)
+    const startMinutes = 8 * 60 + 15;  // 08:15
+    const endMinutes = 13 * 60 + 0;    // 13:00
 
     if (timeInMinutes < startMinutes || timeInMinutes > endMinutes) {
-        console.log(`Outside scheduled time range (07:30 - 12:00). Current: ${currentHour}:${currentMinute < 10 ? '0' : ''}${currentMinute}`);
+        console.log(`Outside scheduled time range (08:15 - 13:00). Current: ${currentHour}:${currentMinute < 10 ? '0' : ''}${currentMinute}`);
         return;
     }
 
@@ -209,7 +209,7 @@ async function runReport() {
 // Initial run
 async function startWorker() {
     console.log('WhatsApp Auto-Report Worker Started.');
-    console.log('Schedule: 07:30 - 12:00 WIB (UTC+7)');
+    console.log('Schedule: 08:15 - 13:00 WIB (Monitoring Mode)');
 
     const loop = async () => {
         try {

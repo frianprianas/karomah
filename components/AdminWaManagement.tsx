@@ -153,7 +153,7 @@ export default function AdminWaManagement({ userRole }: { userRole?: string }) {
                     <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
                         <h4 className="text-amber-800 font-bold text-sm mb-1 uppercase">Informasi Penjadwalan:</h4>
                         <ul className="text-amber-700 text-xs space-y-1 font-serif">
-                            <li>• Pesan dikirim setiap hari antara pukul 07:30 s/d 12:00 WIB.</li>
+                            <li>• Jadwal Monitoring: 08:15 s/d 13:00 WIB.</li>
                             <li>• Setiap Wali Kelas akan dikirimi ringkasan progress amalan santri di kelasnya.</li>
                             <li>• Jeda antar pesan diatur acak antara 10 - 30 menit untuk menghindari spam.</li>
                         </ul>
