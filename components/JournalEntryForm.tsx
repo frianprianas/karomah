@@ -343,6 +343,42 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                 <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-[#8d6e63] opacity-40"></div>
                 <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-[#8d6e63] opacity-40"></div>
 
+                {/* Halangan (Haid) Toggle - MOVED TO TOP FOR VISIBILITY */}
+                <div className="relative z-20 mb-8 bg-gradient-to-r from-red-50 to-orange-50 p-4 rounded-xl border-2 border-red-200 shadow-md animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className={`p-2.5 rounded-full ${formData.sedang_halangan ? 'bg-red-600 text-white shadow-lg' : 'bg-gray-300 text-gray-500'} transition-all duration-300`}>
+                                <Users className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h4 className="text-base font-bold text-[#3e2723] font-serif">Sedang Berhalangan (Haid)</h4>
+                                <p className="text-[11px] text-[#8d6e63] font-serif italic font-medium">Khusus Siswi: Aktifkan jika sedang dalam masa haid</p>
+                            </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={formData.sedang_halangan}
+                                onChange={(e) => {
+                                    const val = e.target.checked;
+                                    setFormData({
+                                        ...formData,
+                                        sedang_halangan: val,
+                                        ...(val ? {
+                                            sahur: false,
+                                            sholat_wajib: DEFAULT_DATA.sholat_wajib,
+                                            sholat_sunah: DEFAULT_DATA.sholat_sunah,
+                                            tadarus: DEFAULT_DATA.tadarus
+                                        } : {})
+                                    });
+                                }}
+                                className="sr-only peer"
+                            />
+                            <div className="w-14 h-7 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-red-600"></div>
+                        </label>
+                    </div>
+                </div>
+
                 {/* Header Sekolah & Hadits Harian */}
                 <div className="text-center mb-6 relative z-10">
                     <h2 className="font-serif text-lg md:text-xl font-bold text-[#3e2723] uppercase tracking-widest mb-4 border-b-2 border-[#8d6e63]/20 pb-2 inline-block">
@@ -446,47 +482,6 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                     </div>
                 )}
 
-                {/* Halangan (Haid) Toggle */}
-                <div className="bg-gradient-to-r from-red-50 to-orange-50 p-4 rounded-xl border border-red-100 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-full ${formData.sedang_halangan ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-500'} transition-colors`}>
-                                <Users className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-bold text-[#3e2723] font-serif">Sedang Berhalangan (Haid)</h4>
-                                <p className="text-[10px] text-[#8d6e63] font-serif italic">Khusus Siswi: Aktifkan jika sedang berhalangan ibadah</p>
-                            </div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={formData.sedang_halangan}
-                                onChange={(e) => {
-                                    const val = e.target.checked;
-                                    setFormData({
-                                        ...formData,
-                                        sedang_halangan: val,
-                                        // Reset religious fields if halangan is active (optional but cleaner)
-                                        ...(val ? {
-                                            sahur: false,
-                                            sholat_wajib: DEFAULT_DATA.sholat_wajib,
-                                            sholat_sunah: DEFAULT_DATA.sholat_sunah,
-                                            tadarus: DEFAULT_DATA.tadarus
-                                        } : {})
-                                    });
-                                }}
-                                className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
-                        </label>
-                    </div>
-                    {formData.sedang_halangan && (
-                        <div className="mt-3 p-2 bg-white/60 rounded border border-red-100 text-[10px] text-red-700 font-serif leading-relaxed italic animate-in zoom-in duration-300">
-                            "Ketika berhalangan, pengisian amalan sholat, puasa, dan tadarus akan dinonaktifkan secara otomatis. Tetaplah berdzikir dan berbuat kebaikan lainnya."
-                        </div>
-                    )}
-                </div>
 
                 {/* Rutinitas Pagi */}
                 <section className={`space-y-4 transition-all duration-500 ${formData.sedang_halangan ? 'opacity-50 grayscale' : ''}`}>
