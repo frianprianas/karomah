@@ -1,20 +1,22 @@
-
 const mongoose = require('mongoose');
-const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const path = require('path');
 
-// Load environment variables
+// Global fetch is available in Node 18+ (We use Node 20)
+// No need to require node-fetch
+
+// Load environment variables if file exists (Dev mode)
 dotenv.config({ path: path.join(__dirname, '../.env.local') });
 
+// Prioritize process.env (Docker/Prod) over dotenv
 const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
-    console.error('MONGODB_URI is not defined in .env.local');
+    console.error('[CRITICAL] MONGODB_URI is not defined in environment variables.');
     process.exit(1);
 }
 
-// Model Definitions with Explicit Collection Names (To match Next.js Mongoose models)
+// Model Definitions with Explicit Collection Names
 const Setting = mongoose.models.Setting || mongoose.model('Setting', new mongoose.Schema({
     key: String,
     value: mongoose.Schema.Types.Mixed
@@ -42,7 +44,19 @@ const Jurnal = mongoose.models.Jurnal || mongoose.model('Jurnal', new mongoose.S
 
 async function connectDB() {
     if (mongoose.connection.readyState >= 1) return;
-    return mongoose.connect(MONGODB_URI);
+    try {
+        console.log('[DB] Connecting to MongoDB...');
+        await mongoose.connect(MONGODB_URI);
+        console.log('[DB] Connected successfully.');
+
+        // Brief check of data
+        const gCount = await Guru.countDocuments({});
+        const sCount = await Siswa.countDocuments({});
+        console.log(`[DB] Data Snapshot: ${gCount} Gurus, ${sCount} Siswas.`);
+    } catch (err) {
+        console.error('[DB] Connection Error:', err.message);
+        process.exit(1);
+    }
 }
 
 async function sendWhatsApp(target, message) {
@@ -56,6 +70,7 @@ async function sendWhatsApp(target, message) {
     formattedTarget = formattedTarget.replace(/\D/g, '');
 
     try {
+        // Using global fetch (Node 20)
         const response = await fetch('https://api.fonnte.com/send', {
             method: 'POST',
             headers: { 'Authorization': token },
@@ -68,13 +83,14 @@ async function sendWhatsApp(target, message) {
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error(`Error sending to ${target}:`, error);
+        console.error(`[WA] Fetch Error for ${target}:`, error.message);
         throw error;
     }
 }
 
 function getWIBDate() {
     const now = new Date();
+    // Adjust to WIB (UTC+7)
     const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
     return new Date(utc + (3600000 * 7)); // UTC + 7 (WIB)
 }
@@ -102,11 +118,11 @@ async function runReport() {
     const nowWIB = getWIBDate();
     const currentDay = nowWIB.getDate();
 
-    console.log(`[LOG ${nowWIB.toLocaleTimeString('id-ID')}] Checking report trigger...`);
+    console.log(`[LOG ${nowWIB.toLocaleTimeString('id-ID')}] Checking triggers...`);
 
     // Reset tracker if day changes
     if (currentDay !== lastDay) {
-        console.log('--- New day detected (WIB). Resetting sentToday list ---');
+        console.log('--- NEW DAY DETECTED (WIB). CLEARING SENT LIST ---');
         sentToday.clear();
         lastDay = currentDay;
     }
@@ -115,12 +131,12 @@ async function runReport() {
     const currentMinute = nowWIB.getMinutes();
     const timeInMinutes = currentHour * 60 + currentMinute;
 
-    // Schedule: 08:45 to 13:00 WIB
-    const startMinutes = 8 * 60 + 45;  // 08:45
+    // TARGET: 09:00 to 13:00 WIB
+    const startMinutes = 9 * 60 + 0;   // 09:00
     const endMinutes = 13 * 60 + 0;   // 13:00
 
     if (timeInMinutes < startMinutes || timeInMinutes > endMinutes) {
-        console.log(`[INFO] Outside scheduled range (08:45-13:00). Current: ${currentHour}:${currentMinute < 10 ? '0' : ''}${currentMinute}`);
+        console.log(`[INFO] Idle Mode. Schedule: 09:00-13:00. Current WIB: ${currentHour}:${currentMinute < 10 ? '0' : ''}${currentMinute}`);
         return;
     }
 
@@ -128,7 +144,7 @@ async function runReport() {
 
     const settings = await Setting.findOne({ key: 'wa_auto_report' }).lean();
     if (!settings || !settings.value.enabled) {
-        console.log('[WARN] Feature wa_auto_report is DISABLED in settings.');
+        console.log('[WARN] Feature DISABLED in Admin Settings.');
         return;
     }
 
@@ -142,21 +158,21 @@ async function runReport() {
     const pendingTeachers = allTeachers.filter(t => !sentToday.has(t.nipy));
 
     if (pendingTeachers.length === 0) {
-        console.log('[INFO] No pending teachers for today.');
+        console.log('[INFO] Finished. All Wali Kelas notified for today.');
         return;
     }
 
-    console.log(`[INFO] Found ${pendingTeachers.length} pending teachers out of ${allTeachers.length} active Wali Kelas.`);
+    console.log(`[INFO] Pending: ${pendingTeachers.length}/${allTeachers.length} teachers.`);
 
     // Pick ONE random teacher to send to
     const teacher = pendingTeachers[Math.floor(Math.random() * pendingTeachers.length)];
 
-    console.log(`[INFO] Processing report for: ${teacher.nama} (Kelas: ${teacher.waliKelas})`);
+    console.log(`[ACTION] Preparing report for: ${teacher.nama} (${teacher.waliKelas})`);
 
     // Process Report for this teacher
     const students = await Siswa.find({ kelas: teacher.waliKelas }).lean();
     if (students.length === 0) {
-        console.log(`[WARN] No students found for class ${teacher.waliKelas}. Skipping.`);
+        console.log(`[WARN] No students found for ${teacher.waliKelas}. Skipping teacher.`);
         sentToday.add(teacher.nipy);
         return;
     }
@@ -197,53 +213,51 @@ async function runReport() {
 
     const message = `${greeting} *Ustadz/ah ${teacher.nama}*,\n\n${body}\n\nMohon bantuannya untuk mengingatkan santri yang belum mengisi agar segera melengkapi jurnalnya hari ini.\n\nTerima kasih,\n_Admin Karomah BN666_`;
 
-    console.log(`[ACTION] Sending WhatsApp message to ${teacher.nama} (${teacher.noHp})...`);
+    console.log(`[ACTION] Dispatching to Fonnte -> ${teacher.nama} (${teacher.noHp})...`);
 
     try {
         const result = await sendWhatsApp(teacher.noHp, message);
         if (result && result.status === true) {
-            console.log(`[SUCCESS] Message successfully queued for ${teacher.nama}.`);
+            console.log(`[SUCCESS] Sent to ${teacher.nama}.`);
             sentToday.add(teacher.nipy);
         } else {
-            console.error(`[ERROR] Fonnte reported failure: ${JSON.stringify(result)}`);
+            console.error(`[FAIL] Fonnte Error: ${JSON.stringify(result)}`);
         }
     } catch (err) {
-        console.error(`[CRITICAL] Failed to execute sendWhatsApp:`, err.message);
+        console.error(`[CRITICAL] Error in sendWhatsApp execution:`, err.message);
     }
 }
 
 // Initial run
 async function startWorker() {
     console.log('============================================');
-    console.log('WhatsApp Auto-Report Worker Started Bootstrapping');
-    console.log('Schedule: 08:45 - 13:00 WIB');
+    console.log('WA AUTO-REPORT WORKER STARTING (NODE 20)');
+    console.log('Schedule: 09:00 - 13:00 WIB');
     console.log('============================================');
 
     const loop = async () => {
         try {
             await runReport();
         } catch (error) {
-            console.error('[EROR] Worker Loop Failed:', error);
+            console.error('[FATAL] Loop Crash:', error.message);
         }
 
         const nowWIB = getWIBDate();
-        const currentHour = nowWIB.getHours();
-        const currentMinute = nowWIB.getMinutes();
-        const timeInMinutes = currentHour * 60 + currentMinute;
-        const startMinutes = 8 * 60 + 45;
+        const timeInMinutes = nowWIB.getHours() * 60 + nowWIB.getMinutes();
+        const startMinutes = 9 * 60 + 0;
 
-        let nextRunMinutes;
+        let delay;
         // High frequency check near start time
         if (timeInMinutes >= startMinutes - 10 && timeInMinutes < startMinutes) {
-            nextRunMinutes = 0.5; // Every 30 seconds to be precise
-        } else if (timeInMinutes >= startMinutes && timeInMinutes <= startMinutes + 10) {
-            nextRunMinutes = 2; // Every 2 minutes during initial hour
+            delay = 0.5; // Every 30 seconds to be precise
+        } else if (timeInMinutes >= startMinutes && timeInMinutes <= startMinutes + 30) {
+            delay = 2;   // Fast burst at start
         } else {
-            nextRunMinutes = 5 + Math.random() * 10;
+            delay = 10;  // Normal interval
         }
 
-        console.log(`[WAIT] Next run in ${Math.round(nextRunMinutes * 10) / 10} minutes.`);
-        setTimeout(loop, nextRunMinutes * 60 * 1000);
+        console.log(`[WAIT] Re-checking in ${delay} minutes.`);
+        setTimeout(loop, delay * 60 * 1000);
     };
 
     loop();
