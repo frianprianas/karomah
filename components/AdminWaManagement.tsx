@@ -87,16 +87,38 @@ export default function AdminWaManagement({ userRole }: { userRole?: string }) {
                         </span>
                     </div>
 
-                    {!isReadOnly && (
+                    <div className="flex justify-end gap-3 mt-8">
+                        {userRole === 'admin' && (
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    if (!confirm('Jalankan uji coba kirim laporan ke salah satu Wali Kelas? (Data asli akan terkirim)')) return;
+                                    try {
+                                        const res = await fetch('/api/admin/wa-test');
+                                        const data = await res.json();
+                                        if (data.success) {
+                                            alert('Debug Berhasil:\n' + data.logs.join('\n'));
+                                        } else {
+                                            alert('Debug Gagal: ' + (data.error || JSON.stringify(data)));
+                                        }
+                                    } catch (e: any) {
+                                        alert('Error: ' + e.message);
+                                    }
+                                }}
+                                className="px-6 py-2 border-2 border-[#8d6e63] text-[#8d6e63] font-bold rounded-lg hover:bg-amber-50 transition-colors"
+                            >
+                                Uji Coba Kirim (Debug)
+                            </button>
+                        )}
                         <button
-                            onClick={handleSave}
-                            disabled={saving}
-                            className="flex items-center gap-2 px-6 py-2 bg-[#5d4037] text-white rounded-full text-sm font-bold hover:bg-[#3e2723] transition-all disabled:opacity-50"
+                            type="submit"
+                            onClick={handleSave} // Added onClick to call handleSave
+                            disabled={saving || userRole === 'spv'} // Changed loading to saving for consistency with handleSave
+                            className="px-10 py-2 bg-[#5d4037] text-[#fdfbf7] font-bold rounded-lg hover:bg-[#3e2723] disabled:opacity-50 shadow-md transform active:scale-95 transition-all outline-none"
                         >
-                            <Save className="w-4 h-4" />
-                            {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
+                            {saving ? 'Menyimpan...' : 'Simpan Pengaturan'}
                         </button>
-                    )}
+                    </div>
                 </div>
 
                 <div className="p-6 space-y-6">
