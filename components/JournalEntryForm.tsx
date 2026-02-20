@@ -447,16 +447,16 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                 )}
 
 
-                {/* Halangan (Haid) Toggle - POSITIONED ABOVE MORNING ROUTINE */}
-                <div className="mb-8 bg-gradient-to-r from-red-50 to-orange-50 p-5 rounded-xl border-2 border-red-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="flex items-center justify-between">
+                {/* Halangan (Haid) Toggle - FORCED VISIBILITY */}
+                <div className="w-full mb-8 bg-[#fff5f5] p-6 rounded-xl border-4 border-red-200 shadow-md relative z-50">
+                    <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
-                            <div className={`p-3 rounded-full ${formData.sedang_halangan ? 'bg-red-600 text-white shadow-lg' : 'bg-gray-300 text-gray-500'} transition-all duration-300`}>
+                            <div className={`p-3 rounded-full ${formData.sedang_halangan ? 'bg-red-600 text-white shadow-lg' : 'bg-gray-300 text-gray-500'} transition-all`}>
                                 <Users className="w-6 h-6" />
                             </div>
                             <div>
-                                <h4 className="text-lg font-bold text-[#3e2723] font-serif">Sedang Berhalangan (Haid)</h4>
-                                <p className="text-xs text-[#8d6e63] font-serif italic">Gunakan ini jika anda "Akhwat yang sedang berhalangan"</p>
+                                <h4 className="text-lg font-bold text-[#3e2723] font-serif">Status Berhalangan</h4>
+                                <p className="text-xs text-red-600 font-serif font-bold italic">Gunakan ini jika anda "Akhwat yang sedang berhalangan"</p>
                             </div>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
@@ -481,6 +481,11 @@ export default function JournalEntryForm({ day, initialData }: JournalEntryFormP
                             <div className="w-14 h-7 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-red-600"></div>
                         </label>
                     </div>
+                    {formData.sedang_halangan && (
+                        <div className="mt-4 p-3 bg-white/90 rounded-lg border border-red-100 text-[11px] text-red-800 font-serif leading-relaxed italic">
+                            "Amalan ibadah otomatis dinonaktifkan. Tetap semangat menjalankan ibadah lainnya!"
+                        </div>
+                    )}
                 </div>
 
                 {/* Rutinitas Pagi */}
