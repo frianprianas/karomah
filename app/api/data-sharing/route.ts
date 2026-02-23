@@ -26,13 +26,15 @@ export async function GET(req: Request) {
 
         let data;
         if (type === 'siswa') {
+            // Mengambil detail profil siswa
             data = await Siswa.find({})
-                .select('nama nis kelas status -_id')
+                .select('nama nis kelas status foto gender -_id')
                 .lean();
         } else if (type === 'jurnal') {
+            // Mengambil detail isi jurnal secara lengkap
             data = await Jurnal.find({})
-                .select('nama nis tgl_jurnal points -_id')
-                .limit(1000) // Batasi untuk performa
+                .select('nis tgl_jurnal jam_bangun sahur sholat_wajib sholat_sunah tadarus olah_raga bantu_ortu aktifitas_sosial catatan_ihsan jam_tidur sedang_halangan catatan_guru -_id')
+                .limit(2000) // Dinaikkan batasnya
                 .lean();
         } else {
             return NextResponse.json({
