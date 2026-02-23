@@ -11,6 +11,8 @@ import WelcomeModal from '@/components/WelcomeModal';
 import QnAFloatingButton from '@/components/QnAFloatingButton';
 import StoriesFloatingButton from '@/components/StoriesFloatingButton';
 import { calculatePoints, getBadge } from '@/lib/gamification';
+import SalawatModal from '@/components/SalawatModal';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -94,7 +96,10 @@ export default async function Dashboard() {
                     </div>
                 </div>
 
+                <SalawatModal />
+
                 {/* Header / Title Page Effect */}
+
                 <div className="w-full text-center border-b-2 border-double border-[#8d6e63] pb-6 mb-8 mt-4">
                     <div className="flex justify-center mb-4">
                         <div className="p-1 rounded-full border-2 border-[#8d6e63] shadow-sm overflow-hidden w-[88px] h-[88px] relative group">
