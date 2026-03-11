@@ -86,6 +86,9 @@ export async function GET(req: Request) {
             };
         });
 
+        // Sort from largest points (most filled days) to least.
+        data.sort((a, b) => b.totalIsi - a.totalIsi || a.nama.localeCompare(b.nama));
+
         return NextResponse.json({
             data,
             pagination: {
