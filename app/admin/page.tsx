@@ -7,6 +7,7 @@ import AdminWaManagement from '@/components/AdminWaManagement';
 import AdminSpvManagement from '@/components/AdminSpvManagement';
 import AdminStoriesManagement from '@/components/AdminStoriesManagement';
 import AdminMonitoring from '@/components/AdminMonitoring';
+import AdminRecap from '@/components/AdminRecap';
 import { FileText, ArrowLeft, History, Users, Database } from 'lucide-react';
 import Image from 'next/image';
 
@@ -43,6 +44,9 @@ export default async function AdminDashboard() {
 
                 {/* --- NEW: Monitoring Section (Statistik & Jurnal) --- */}
                 <AdminMonitoring role={session.role} />
+
+                {/* --- NEW: Recap Section --- */}
+                <AdminRecap />
 
                 {/* --- Menu Cards --- */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 w-full mt-10 mb-10">
